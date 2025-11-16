@@ -32,6 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Guru Routes
     Route::prefix('guru')->name('guru.')->middleware('role:guru')->group(function () {
         Route::get('dashboard', [GuruDashboardController::class, 'index'])->name('dashboard');
+        Route::get('siswa/{student}/activities', [GuruDashboardController::class, 'showStudentActivities'])->name('student.activities');
+        Route::get('siswa/{student}/activity/{activity}', [GuruDashboardController::class, 'showStudentActivityDetail'])->name('student.activity.show');
+        Route::post('siswa/{student}/activity/{activity}/task/{task}/submit', [GuruDashboardController::class, 'submitStudentTask'])->name('student.activity.task.submit');
+        Route::get('siswa/{student}/biodata', [GuruDashboardController::class, 'showStudentBiodata'])->name('student.biodata');
     });
 
     // Admin Routes
