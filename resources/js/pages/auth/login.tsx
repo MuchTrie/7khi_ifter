@@ -150,7 +150,7 @@ export default function Login({
                                                 tabIndex={1}
                                                 autoComplete="email"
                                                 placeholder="Enter email address"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                                             />
                                             <InputError message={errors.email} />
                                         </div>
@@ -169,7 +169,7 @@ export default function Login({
                                                     tabIndex={2}
                                                     autoComplete="current-password"
                                                     placeholder="Password"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-16"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-16 text-black"
                                                 />
                                                 <button
                                                     type="button"
