@@ -25,6 +25,8 @@ interface ActivityHistoryProps {
 
 export default function ActivityHistory({ auth, activity }: ActivityHistoryProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const monthNames = [
         'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
@@ -42,7 +44,13 @@ export default function ActivityHistory({ auth, activity }: ActivityHistoryProps
     const daysInMonth = getDaysInMonth();
 
     // Generate array of days (1 to daysInMonth)
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(allDays.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const days = allDays.slice(startIndex, endIndex);
 
     return (
         <AppLayout>
@@ -107,6 +115,25 @@ export default function ActivityHistory({ auth, activity }: ActivityHistoryProps
                                 <h2 className="text-2xl font-bold text-blue-900">
                                     Bulan : {monthNames[currentMonth.getMonth()]}
                                 </h2>
+                            </div>
+
+                            {/* Filter Dropdown */}
+                            <div className="mb-4 flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-700">Show</span>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={31}>31</option>
+                                </select>
+                                <span className="text-sm font-medium text-gray-700">entries</span>
                             </div>
 
                             {/* Table */}
@@ -189,9 +216,57 @@ export default function ActivityHistory({ auth, activity }: ActivityHistoryProps
                                     </table>
                                 </div>
 
-                                {/* Timestamp */}
-                                <div className="text-right text-sm text-gray-500 p-4">
-                                    Apr 1, 2025    9:41 AM
+                                {/* Pagination Section */}
+                                <div className="flex items-center justify-center gap-2 p-4 border-t border-gray-200">
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        «
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ‹
+                                    </button>
+
+                                    <div className="flex gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                    currentPage === page
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ›
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        »
+                                    </button>
+
+                                    <span className="text-sm text-gray-600 ml-2">
+                                        Halaman {currentPage} dari {totalPages}
+                                    </span>
                                 </div>
                             </div>
                         </div>
