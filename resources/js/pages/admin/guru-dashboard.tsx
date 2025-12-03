@@ -260,7 +260,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             placeholder="Masukkan nama guru"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         />
                                     </div>
@@ -273,7 +273,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             name="class"
                                             value={formData.class}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         >
                                             <option value="">Pilih Kelas</option>
@@ -302,7 +302,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.password}
                                             onChange={handleInputChange}
                                             placeholder="Masukkan password"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         />
                                     </div>
@@ -317,7 +317,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.passwordConfirmation}
                                             onChange={handleInputChange}
                                             placeholder="Konfirmasi password"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         />
                                     </div>
@@ -370,7 +370,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             placeholder="Masukkan nama guru"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         />
                                     </div>
@@ -383,7 +383,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             name="class"
                                             value={formData.class}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                             required
                                         >
                                             <option value="">Pilih Kelas</option>
@@ -412,7 +412,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.password}
                                             onChange={handleInputChange}
                                             placeholder="Masukkan password baru"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                         />
                                     </div>
 
@@ -426,7 +426,7 @@ export default function GuruDashboard({ auth, teachers }: GuruDashboardProps) {
                                             value={formData.passwordConfirmation}
                                             onChange={handleInputChange}
                                             placeholder="Konfirmasi password baru"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-900"
                                         />
                                     </div>
 
