@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 50); // contoh: "1A", "2B"
-            $table->integer('grade'); // 1, 2, 3, 4, 5, 6
+            $table->string('name', 50); // contoh: "7A", "8B", "9C"
+            $table->integer('grade'); // 7, 8, 9 (SMP)
             $table->string('section', 10); // A, B, C
             $table->foreignId('teacher_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('academic_year', 20); // contoh: "2025/2026"

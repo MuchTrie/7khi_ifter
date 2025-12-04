@@ -10,15 +10,34 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     /**
-     * Display the admin dashboard with classes.
+     * Display the admin dashboard with statistics.
      */
     public function index(): Response
     {
-        // TODO: Get classes from database
-        // For now, return empty array and let frontend use mock data
-        
+        $stats = [
+            'totalSiswa' => User::where('role', User::ROLE_SISWA)->count(),
+            'totalGuru' => User::where('role', User::ROLE_GURU)->count(),
+            'totalOrangtua' => User::where('role', User::ROLE_ORANGTUA)->count(),
+            'totalKelas' => \App\Models\ClassModel::count(),
+        ];
+
         return Inertia::render('admin/dashboard', [
-            'classes' => [],
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Display the classes page.
+     */
+    public function kelas(): Response
+    {
+        $classes = \App\Models\ClassModel::withCount('students')
+            ->orderBy('grade')
+            ->orderBy('section')
+            ->get();
+
+        return Inertia::render('admin/kelas', [
+            'classes' => $classes,
         ]);
     }
 
@@ -82,18 +101,18 @@ class DashboardController extends Controller
         // Parse classId (format: "1a", "2b") to get grade and section
         $grade = (int) substr($classId, 0, 1);
         $section = strtoupper(substr($classId, 1));
-        
+
         // Find the class
         $class = \App\Models\ClassModel::where('grade', $grade)
             ->where('section', $section)
             ->first();
-            
+
         if (!$class) {
             abort(404, 'Kelas tidak ditemukan');
         }
-        
+
         $className = 'Kelas ' . $class->name;
-        
+
         // Get students with their user data and biodata
         $students = \App\Models\Student::where('class_id', $class->id)
             ->with(['user', 'biodata'])
@@ -166,7 +185,7 @@ class DashboardController extends Controller
                     'createdAt' => $teacher->created_at->format('d/m/Y'),
                 ];
             });
-        
+
         // Get all classes for the dropdown
         $allClasses = \App\Models\ClassModel::orderBy('grade')
             ->orderBy('section')
@@ -179,7 +198,7 @@ class DashboardController extends Controller
                     'section' => $class->section,
                 ];
             });
-        
+
         return Inertia::render('admin/guru-dashboard', [
             'teachers' => $teachers,
             'allClasses' => $allClasses,
@@ -226,7 +245,7 @@ class DashboardController extends Controller
                     ->flatten()
                     ->unique('id')
                     ->count();
-                
+
                 return [
                     'id' => strtolower($class->grade . $class->section),
                     'name' => 'Kelas ' . $class->name,
@@ -247,23 +266,23 @@ class DashboardController extends Controller
         // Parse classId (format: "1a", "2b") to get grade and section
         $grade = (int) substr($classId, 0, 1);
         $section = strtoupper(substr($classId, 1));
-        
+
         // Find the class
         $class = \App\Models\ClassModel::where('grade', $grade)
             ->where('section', $section)
             ->first();
-            
+
         if (!$class) {
             abort(404, 'Kelas tidak ditemukan');
         }
-        
+
         $className = 'Kelas ' . $class->name;
-        
+
         // Get parents through students in this class
         $students = \App\Models\Student::where('class_id', $class->id)
             ->with(['parents.user'])
             ->get();
-            
+
         $parentsCollection = collect();
         foreach ($students as $student) {
             foreach ($student->parents as $parent) {

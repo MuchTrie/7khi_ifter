@@ -74,7 +74,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin Routes
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('kelas', [AdminDashboardController::class, 'kelas'])->name('kelas');
         Route::get('users', [AdminDashboardController::class, 'users'])->name('users');
+
+        // Class CRUD API
+        Route::post('classes', [\App\Http\Controllers\Admin\ClassController::class, 'store'])->name('classes.store');
+        Route::put('classes/{class}', [\App\Http\Controllers\Admin\ClassController::class, 'update'])->name('classes.update');
+        Route::delete('classes/{class}', [\App\Http\Controllers\Admin\ClassController::class, 'destroy'])->name('classes.destroy');
 
         // Siswa Routes
         Route::get('siswa-dashboard', [AdminDashboardController::class, 'siswaDashboard'])->name('siswa.dashboard');
@@ -90,7 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Guru Routes
         Route::get('guru-dashboard', [AdminDashboardController::class, 'guruDashboard'])->name('guru.dashboard');
         Route::get('guru-management', [AdminDashboardController::class, 'guruManagement'])->name('guru.management');
-        
+
         // Teacher CRUD API
         Route::post('teachers', [\App\Http\Controllers\Admin\TeacherController::class, 'store'])->name('teachers.store');
         Route::put('teachers/{teacher}', [\App\Http\Controllers\Admin\TeacherController::class, 'update'])->name('teachers.update');
