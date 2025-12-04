@@ -16,7 +16,7 @@ import { dashboard as guruDashboard } from '@/routes/guru';
 import { dashboard as orangtuaDashboard } from '@/routes/orangtua';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, User, Music, Calendar, Users, GraduationCap, UserCog, ClipboardCheck } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, User, Music, Calendar, Users, GraduationCap, UserCog, ClipboardCheck, School } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -55,6 +55,16 @@ const adminNavItems: NavItem[] = [
         title: 'Beranda',
         href: '/admin/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Kelas',
+        href: '/admin/kelas',
+        icon: School,
+    },
+    {
+        title: 'Manajemen',
+        href: '#',
+        icon: Users,
         items: [
             {
                 title: 'Siswa',

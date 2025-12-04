@@ -24,18 +24,15 @@ export default function SiswaDashboard({ auth, classes }: SiswaDashboardProps) {
 
     // Mock data untuk kelas jika backend belum siap
     const mockClasses: Class[] = [
-        { id: '1a', name: 'Kelas 1A', studentCount: 25 },
-        { id: '1b', name: 'Kelas 1B', studentCount: 28 },
-        { id: '2a', name: 'Kelas 2A', studentCount: 26 },
-        { id: '2b', name: 'Kelas 2B', studentCount: 27 },
-        { id: '3a', name: 'Kelas 3A', studentCount: 24 },
-        { id: '3b', name: 'Kelas 3B', studentCount: 29 },
-        { id: '4a', name: 'Kelas 4A', studentCount: 25 },
-        { id: '4b', name: 'Kelas 4B', studentCount: 26 },
-        { id: '5a', name: 'Kelas 5A', studentCount: 27 },
-        { id: '5b', name: 'Kelas 5B', studentCount: 28 },
-        { id: '6a', name: 'Kelas 6A', studentCount: 24 },
-        { id: '6b', name: 'Kelas 6B', studentCount: 25 },
+        { id: '7a', name: 'Kelas 7A', studentCount: 30 },
+        { id: '7b', name: 'Kelas 7B', studentCount: 28 },
+        { id: '7c', name: 'Kelas 7C', studentCount: 29 },
+        { id: '8a', name: 'Kelas 8A', studentCount: 32 },
+        { id: '8b', name: 'Kelas 8B', studentCount: 30 },
+        { id: '8c', name: 'Kelas 8C', studentCount: 31 },
+        { id: '9a', name: 'Kelas 9A', studentCount: 28 },
+        { id: '9b', name: 'Kelas 9B', studentCount: 27 },
+        { id: '9c', name: 'Kelas 9C', studentCount: 29 },
     ];
 
     const displayClasses = classes && classes.length > 0 ? classes : mockClasses;
@@ -94,10 +91,10 @@ export default function SiswaDashboard({ auth, classes }: SiswaDashboardProps) {
                                 <div className="flex flex-col items-center">
                                     {/* School Icon */}
                                     <div className="text-4xl sm:text-5xl lg:text-6xl mb-2 sm:mb-3">🏫</div>
-                                    
+
                                     {/* Class Name */}
                                     <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">{cls.name}</h3>
-                                    
+
                                     {/* Student Count */}
                                     <div className="flex items-center gap-2 text-blue-600">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
