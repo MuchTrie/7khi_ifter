@@ -57,8 +57,20 @@ class DashboardController extends Controller
      */
     public function siswaDashboard(): Response
     {
+        $classes = \App\Models\ClassModel::withCount('students')
+            ->orderBy('grade')
+            ->orderBy('section')
+            ->get()
+            ->map(function ($class) {
+                return [
+                    'id' => strtolower($class->grade . $class->section), // "1a", "2b", etc.
+                    'name' => 'Kelas ' . $class->name, // "Kelas 1A"
+                    'studentCount' => $class->students_count,
+                ];
+            });
+
         return Inertia::render('admin/siswa-dashboard', [
-            'classes' => [],
+            'classes' => $classes,
         ]);
     }
 
@@ -67,29 +79,44 @@ class DashboardController extends Controller
      */
     public function classStudents(string $classId): Response
     {
-        // TODO: Get students from database based on class
-        // For now, return empty array and let frontend use mock data
+        // Parse classId (format: "1a", "2b") to get grade and section
+        $grade = (int) substr($classId, 0, 1);
+        $section = strtoupper(substr($classId, 1));
         
-        $className = match($classId) {
-            '1a' => 'Kelas 1A',
-            '1b' => 'Kelas 1B',
-            '2a' => 'Kelas 2A',
-            '2b' => 'Kelas 2B',
-            '3a' => 'Kelas 3A',
-            '3b' => 'Kelas 3B',
-            '4a' => 'Kelas 4A',
-            '4b' => 'Kelas 4B',
-            '5a' => 'Kelas 5A',
-            '5b' => 'Kelas 5B',
-            '6a' => 'Kelas 6A',
-            '6b' => 'Kelas 6B',
-            default => 'Kelas',
-        };
+        // Find the class
+        $class = \App\Models\ClassModel::where('grade', $grade)
+            ->where('section', $section)
+            ->first();
+            
+        if (!$class) {
+            abort(404, 'Kelas tidak ditemukan');
+        }
+        
+        $className = 'Kelas ' . $class->name;
+        
+        // Get students with their user data and biodata
+        $students = \App\Models\Student::where('class_id', $class->id)
+            ->with(['user', 'biodata'])
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->user->name ?? 'N/A',
+                    'email' => $student->user->email ?? 'N/A',
+                    'nis' => $student->nis ?? 'N/A',
+                    'nisn' => $student->nisn ?? 'N/A',
+                    'religion' => $student->religion ?? ($student->biodata->religion ?? 'N/A'),
+                    'gender' => $student->gender ?? ($student->biodata->gender ?? 'N/A'),
+                    'date_of_birth' => $student->date_of_birth?->format('Y-m-d') ?? null,
+                    'address' => $student->address ?? 'N/A',
+                ];
+            });
 
         return Inertia::render('admin/class-students', [
             'className' => $className,
             'classId' => $classId,
-            'students' => [],
+            'classDbId' => $class->id, // Add database ID for API calls
+            'students' => $students,
         ]);
     }
 
@@ -121,11 +148,20 @@ class DashboardController extends Controller
      */
     public function guruDashboard(): Response
     {
-        // TODO: Get teachers from database
-        // For now, return empty array and let frontend use mock data
+        $teachers = User::where('role', User::ROLE_GURU)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'createdAt' => $user->created_at->format('Y-m-d'),
+                ];
+            });
         
         return Inertia::render('admin/guru-dashboard', [
-            'teachers' => [],
+            'teachers' => $teachers,
         ]);
     }
 
@@ -157,8 +193,28 @@ class DashboardController extends Controller
      */
     public function orangtuaDashboard(): Response
     {
+        $classes = \App\Models\ClassModel::orderBy('grade')
+            ->orderBy('section')
+            ->get()
+            ->map(function ($class) {
+                // Count parents through students in this class
+                $parentCount = \App\Models\Student::where('class_id', $class->id)
+                    ->with('parents')
+                    ->get()
+                    ->pluck('parents')
+                    ->flatten()
+                    ->unique('id')
+                    ->count();
+                
+                return [
+                    'id' => strtolower($class->grade . $class->section),
+                    'name' => 'Kelas ' . $class->name,
+                    'parentCount' => $parentCount,
+                ];
+            });
+
         return Inertia::render('admin/orangtua-dashboard', [
-            'classes' => [],
+            'classes' => $classes,
         ]);
     }
 
@@ -167,29 +223,45 @@ class DashboardController extends Controller
      */
     public function classParents(string $classId): Response
     {
-        // TODO: Get parents from database based on class
-        // For now, return empty array and let frontend use mock data
+        // Parse classId (format: "1a", "2b") to get grade and section
+        $grade = (int) substr($classId, 0, 1);
+        $section = strtoupper(substr($classId, 1));
         
-        $className = match($classId) {
-            '1a' => 'Kelas 1A',
-            '1b' => 'Kelas 1B',
-            '2a' => 'Kelas 2A',
-            '2b' => 'Kelas 2B',
-            '3a' => 'Kelas 3A',
-            '3b' => 'Kelas 3B',
-            '4a' => 'Kelas 4A',
-            '4b' => 'Kelas 4B',
-            '5a' => 'Kelas 5A',
-            '5b' => 'Kelas 5B',
-            '6a' => 'Kelas 6A',
-            '6b' => 'Kelas 6B',
-            default => 'Kelas',
-        };
+        // Find the class
+        $class = \App\Models\ClassModel::where('grade', $grade)
+            ->where('section', $section)
+            ->first();
+            
+        if (!$class) {
+            abort(404, 'Kelas tidak ditemukan');
+        }
+        
+        $className = 'Kelas ' . $class->name;
+        
+        // Get parents through students in this class
+        $students = \App\Models\Student::where('class_id', $class->id)
+            ->with(['parents.user'])
+            ->get();
+            
+        $parentsCollection = collect();
+        foreach ($students as $student) {
+            foreach ($student->parents as $parent) {
+                if (!$parentsCollection->contains('id', $parent->id)) {
+                    $parentsCollection->push([
+                        'id' => $parent->id,
+                        'name' => $parent->user->name ?? 'N/A',
+                        'email' => $parent->user->email ?? 'N/A',
+                        'phone' => $parent->phone ?? 'N/A',
+                        'studentName' => $student->user->name ?? 'N/A',
+                    ]);
+                }
+            }
+        }
 
         return Inertia::render('admin/class-parents', [
             'className' => $className,
             'classId' => $classId,
-            'parents' => [],
+            'parents' => $parentsCollection->values(),
         ]);
     }
 

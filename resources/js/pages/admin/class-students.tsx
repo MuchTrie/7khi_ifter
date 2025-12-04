@@ -1,14 +1,26 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Eye, Edit, Trash2, X, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import axios from 'axios';
+
+// Configure axios with CSRF token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+if (csrfToken) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+}
 
 interface Student {
     id: number;
     name: string;
+    email?: string;
+    nis?: string;
+    nisn?: string;
     religion: string;
     gender: string;
+    date_of_birth?: string;
+    address?: string;
 }
 
 interface ImportedStudent {
@@ -27,31 +39,22 @@ interface ClassStudentsProps {
     };
     className: string;
     classId: string;
+    classDbId: number;
     students: Student[];
 }
 
 interface FormData {
     name: string;
+    email: string;
+    nis: string;
+    nisn: string;
     religion: string;
     gender: string;
+    date_of_birth: string;
+    address: string;
 }
 
-export default function ClassStudents({ auth, className, classId, students }: ClassStudentsProps) {
-    // Mock data jika backend belum siap
-    const initialMockStudents: Student[] = [
-        { id: 1, name: 'Ahmad Fauzi', religion: 'Islam', gender: 'L' },
-        { id: 2, name: 'Siti Nurhaliza', religion: 'Islam', gender: 'P' },
-        { id: 3, name: 'Budi Santoso', religion: 'Islam', gender: 'L' },
-        { id: 4, name: 'Dewi Lestari', religion: 'Islam', gender: 'P' },
-        { id: 5, name: 'Eko Prasetyo', religion: 'Islam', gender: 'L' },
-        { id: 6, name: 'Fitri Handayani', religion: 'Islam', gender: 'P' },
-        { id: 7, name: 'Galih Pratama', religion: 'Islam', gender: 'L' },
-        { id: 8, name: 'Hani Safitri', religion: 'Islam', gender: 'P' },
-        { id: 9, name: 'Irfan Hakim', religion: 'Islam', gender: 'L' },
-        { id: 10, name: 'Jasmine Putri', religion: 'Islam', gender: 'P' },
-        { id: 11, name: 'Kirana Azzahra', religion: 'Islam', gender: 'P' },
-    ];
-
+export default function ClassStudents({ auth, className, classId, classDbId, students }: ClassStudentsProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
@@ -61,16 +64,19 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
     const [importFile, setImportFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-    const [localStudents, setLocalStudents] = useState<Student[]>(
-        students && students.length > 0 ? students : initialMockStudents
-    );
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         name: '',
+        email: '',
+        nis: '',
+        nisn: '',
         religion: '',
         gender: '',
+        date_of_birth: '',
+        address: '',
     });
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -171,31 +177,41 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
         }
     };
 
-    const handleImportSubmit = () => {
-        console.log('Importing data:', importedData);
+    const handleImportSubmit = async () => {
+        if (importedData.length === 0) {
+            alert('Tidak ada data untuk diimport');
+            return;
+        }
 
-        // Convert imported data to Student format with new IDs
-        const newStudents: Student[] = importedData.map((item, index) => ({
-            id: Date.now() + index, // Generate unique ID
-            name: item.name,
-            religion: item.religion,
-            gender: item.gender,
-        }));
+        setIsSubmitting(true);
+        
+        try {
+            const response = await axios.post('/admin/students/import', {
+                class_id: classDbId,
+                students: importedData,
+            });
 
-        // Add to local students
-        setLocalStudents(prev => [...prev, ...newStudents]);
-
-        alert(`${importedData.length} siswa berhasil diimport`);
-        setImportedData([]);
-        setImportFile(null);
-        setShowImportModal(false);
+            if (response.data.success) {
+                // Refresh page to get updated data
+                router.reload({ only: ['students'] });
+                alert(response.data.message);
+                setImportedData([]);
+                setImportFile(null);
+                setShowImportModal(false);
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Terjadi kesalahan saat import siswa';
+            alert(message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const downloadCSVTemplate = () => {
         // Jika ada data di tabel, export data yang ada
         // Jika belum ada, export template sample
-        const dataToExport = localStudents.length > 0
-            ? localStudents.map((student, index) => ({
+        const dataToExport = students.length > 0
+            ? students.map((student, index) => ({
                 'NO': index + 1,
                 'NAMA': student.name,
                 'AGAMA': student.religion,
@@ -219,51 +235,79 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
             { wch: 15 }  // JENIS_KELAMIN
         ];
 
-        const fileName = localStudents.length > 0
+        const fileName = students.length > 0
             ? `data_siswa_${className.replace(/\s+/g, '_')}.xlsx`
             : 'format_siswa.xlsx';
 
         XLSX.writeFile(workbook, fileName);
     };
 
-    const handleAddSubmit = (e: React.FormEvent) => {
+    const handleAddSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Add form submitted:', formData);
+        
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-        // Create new student
-        const newStudent: Student = {
-            id: Date.now(), // Generate unique ID
-            name: formData.name,
-            religion: formData.religion,
-            gender: formData.gender,
-        };
+        try {
+            const response = await axios.post('/admin/students', {
+                class_id: classDbId,
+                name: formData.name,
+                email: formData.email,
+                nis: formData.nis,
+                nisn: formData.nisn || null,
+                religion: formData.religion,
+                gender: formData.gender,
+                date_of_birth: formData.date_of_birth || null,
+                address: formData.address || null,
+            });
 
-        // Add to local students
-        setLocalStudents(prev => [...prev, newStudent]);
-
-        alert('Siswa berhasil ditambahkan');
-        setFormData({ name: '', religion: '', gender: '' });
-        setShowAddModal(false);
+            if (response.data.success) {
+                // Refresh page to get updated data
+                router.reload({ only: ['students'] });
+                alert('Siswa berhasil ditambahkan');
+                setFormData({ name: '', email: '', nis: '', nisn: '', religion: '', gender: '', date_of_birth: '', address: '' });
+                setShowAddModal(false);
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Terjadi kesalahan saat menambahkan siswa';
+            alert(message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const handleEditSubmit = (e: React.FormEvent) => {
+    const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Edit form submitted:', formData);
 
-        if (selectedStudent) {
-            // Update student in local students
-            setLocalStudents(prev => prev.map(student =>
-                student.id === selectedStudent.id
-                    ? { ...student, name: formData.name, religion: formData.religion, gender: formData.gender }
-                    : student
-            ));
+        if (!selectedStudent || isSubmitting) return;
+        setIsSubmitting(true);
 
-            alert('Data siswa berhasil diupdate');
+        try {
+            const response = await axios.put(`/admin/students/${selectedStudent.id}`, {
+                name: formData.name,
+                email: formData.email,
+                nis: formData.nis,
+                nisn: formData.nisn || null,
+                religion: formData.religion,
+                gender: formData.gender,
+                date_of_birth: formData.date_of_birth || null,
+                address: formData.address || null,
+            });
+
+            if (response.data.success) {
+                // Refresh page to get updated data
+                router.reload({ only: ['students'] });
+                alert('Data siswa berhasil diupdate');
+                setFormData({ name: '', email: '', nis: '', nisn: '', religion: '', gender: '', date_of_birth: '', address: '' });
+                setSelectedStudent(null);
+                setShowEditModal(false);
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Terjadi kesalahan saat mengupdate siswa';
+            alert(message);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setFormData({ name: '', religion: '', gender: '' });
-        setSelectedStudent(null);
-        setShowEditModal(false);
     };
 
     const openViewModal = (student: Student) => {
@@ -275,22 +319,38 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
         setSelectedStudent(student);
         setFormData({
             name: student.name,
+            email: student.email || '',
+            nis: student.nis || '',
+            nisn: student.nisn || '',
             religion: student.religion,
             gender: student.gender,
+            date_of_birth: student.date_of_birth || '',
+            address: student.address || '',
         });
         setShowEditModal(true);
     };
 
-    const handleDeleteStudent = (student: Student) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus siswa "${student.name}"?`)) {
-            // Remove from local students
-            setLocalStudents(prev => prev.filter(s => s.id !== student.id));
-            alert('Siswa berhasil dihapus');
+    const handleDeleteStudent = async (student: Student) => {
+        if (!confirm(`Apakah Anda yakin ingin menghapus siswa "${student.name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await axios.delete(`/admin/students/${student.id}`);
+            
+            if (response.data.success) {
+                // Refresh page to get updated data
+                router.reload({ only: ['students'] });
+                alert('Siswa berhasil dihapus');
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Terjadi kesalahan saat menghapus siswa';
+            alert(message);
         }
     };
 
     // Filter siswa berdasarkan search
-    const filteredStudents = localStudents.filter(student =>
+    const filteredStudents = students.filter(student =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -414,8 +474,12 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                     <tr className="border-b-2 border-gray-300 bg-gray-100">
                                         <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">NO</th>
                                         <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">NAMA</th>
+                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm hidden md:table-cell">EMAIL</th>
+                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">NIS</th>
+                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm hidden lg:table-cell">NISN</th>
                                         <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">AGAMA</th>
-                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm hidden sm:table-cell">JENIS KELAMIN</th>
+                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm hidden sm:table-cell">JK</th>
+                                        <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm hidden xl:table-cell">TGL LAHIR</th>
                                         <th className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">AKSI</th>
                                     </tr>
                                 </thead>
@@ -428,11 +492,23 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                             <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center">
                                                 <span className="font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">{student.name}</span>
                                             </td>
+                                            <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center hidden md:table-cell">
+                                                <span className="text-gray-700 text-[11px] sm:text-xs lg:text-sm">{student.email || '-'}</span>
+                                            </td>
+                                            <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center">
+                                                <span className="font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">{student.nis || '-'}</span>
+                                            </td>
+                                            <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center hidden lg:table-cell">
+                                                <span className="text-gray-700 text-[11px] sm:text-xs lg:text-sm">{student.nisn || '-'}</span>
+                                            </td>
                                             <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center">
                                                 <span className="font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">{student.religion}</span>
                                             </td>
                                             <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center hidden sm:table-cell">
                                                 <span className="font-bold text-gray-900 text-[11px] sm:text-xs lg:text-sm">{student.gender}</span>
+                                            </td>
+                                            <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6 text-center hidden xl:table-cell">
+                                                <span className="text-gray-700 text-[11px] sm:text-xs lg:text-sm">{student.date_of_birth || '-'}</span>
                                             </td>
                                             <td className="py-2.5 px-2 sm:py-4 sm:px-4 lg:px-6">
                                                 <div className="flex justify-center gap-0.5 sm:gap-2">
@@ -491,10 +567,10 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                 <p className="text-sm text-gray-600 mt-1">Isi form di bawah untuk menambah data siswa</p>
                             </div>
 
-                            <form onSubmit={handleAddSubmit} className="space-y-4">
+                            <form onSubmit={handleAddSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Nama Siswa
+                                        Nama Siswa <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -509,7 +585,52 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Agama
+                                        Email <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="contoh@email.com"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            NIS <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="nis"
+                                            value={formData.nis}
+                                            onChange={handleInputChange}
+                                            placeholder="Nomor Induk Siswa"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            NISN
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="nisn"
+                                            value={formData.nisn}
+                                            onChange={handleInputChange}
+                                            placeholder="NISN (opsional)"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Agama <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         name="religion"
@@ -530,7 +651,7 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Jenis Kelamin
+                                        Jenis Kelamin <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         name="gender"
@@ -545,7 +666,34 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                     </select>
                                 </div>
 
-                                <div className="flex gap-3 pt-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Tanggal Lahir
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="date_of_birth"
+                                        value={formData.date_of_birth}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Alamat
+                                    </label>
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        placeholder="Masukkan alamat lengkap"
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
                                     <button
                                         type="button"
                                         onClick={() => setShowAddModal(false)}
@@ -581,47 +729,83 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                 <h2 className="text-2xl font-bold text-gray-900">Detail Siswa</h2>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
                                         Nama Siswa
                                     </label>
                                     <p className="text-gray-900 font-semibold">{selectedStudent.name}</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Email
+                                    </label>
+                                    <p className="text-gray-900">{selectedStudent.email || '-'}</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                            NIS
+                                        </label>
+                                        <p className="text-gray-900 font-semibold">{selectedStudent.nis || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                            NISN
+                                        </label>
+                                        <p className="text-gray-900">{selectedStudent.nisn || '-'}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
                                         Agama
                                     </label>
                                     <p className="text-gray-900 font-semibold">{selectedStudent.religion}</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
                                         Jenis Kelamin
                                     </label>
                                     <p className="text-gray-900 font-semibold">{selectedStudent.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
                                 </div>
 
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowViewModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-semibold transition-colors text-sm"
-                                    >
-                                        Tutup
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowViewModal(false);
-                                            openEditModal(selectedStudent);
-                                        }}
-                                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors text-sm"
-                                    >
-                                        Edit
-                                    </button>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Tanggal Lahir
+                                    </label>
+                                    <p className="text-gray-900">{selectedStudent.date_of_birth || '-'}</p>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Alamat
+                                    </label>
+                                    <p className="text-gray-900">{selectedStudent.address || '-'}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-6 border-t mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowViewModal(false)}
+                                    className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-semibold transition-colors text-sm"
+                                >
+                                    Tutup
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowViewModal(false);
+                                        openEditModal(selectedStudent);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors text-sm"
+                                >
+                                    Edit
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -644,10 +828,10 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                 <p className="text-sm text-gray-600 mt-1">Ubah informasi siswa di bawah</p>
                             </div>
 
-                            <form onSubmit={handleEditSubmit} className="space-y-4">
+                            <form onSubmit={handleEditSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Nama Siswa
+                                        Nama Siswa <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -662,7 +846,52 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Agama
+                                        Email <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="contoh@email.com"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            NIS <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="nis"
+                                            value={formData.nis}
+                                            onChange={handleInputChange}
+                                            placeholder="Nomor Induk Siswa"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            NISN
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="nisn"
+                                            value={formData.nisn}
+                                            onChange={handleInputChange}
+                                            placeholder="NISN (opsional)"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Agama <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         name="religion"
@@ -683,7 +912,7 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Jenis Kelamin
+                                        Jenis Kelamin <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         name="gender"
@@ -698,7 +927,34 @@ export default function ClassStudents({ auth, className, classId, students }: Cl
                                     </select>
                                 </div>
 
-                                <div className="flex gap-3 pt-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Tanggal Lahir
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="date_of_birth"
+                                        value={formData.date_of_birth}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Alamat
+                                    </label>
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        placeholder="Masukkan alamat lengkap"
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
                                     <button
                                         type="button"
                                         onClick={() => setShowEditModal(false)}
