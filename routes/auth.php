@@ -27,7 +27,7 @@ Route::group(['middleware' => config('fortify.middleware', ['web'])], function (
 
   Route::post('/login', [LoginController::class, 'store'])
     ->middleware(array_filter([$limiter ? 'throttle:' . $limiter : null]))
-    ->name('login');
+    ->name('login.store');
 
   Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');

@@ -50,6 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Generic activity route (fallback)
         Route::get('activity/{activity}', [SiswaDashboardController::class, 'show'])->name('activity.show');
+
+        // Activity submission routes
+        Route::post('activities/bangun-pagi/submit', [SiswaDashboardController::class, 'submitBangunPagi'])->name('activities.bangun-pagi.submit');
     });
 
     // Orangtua Routes

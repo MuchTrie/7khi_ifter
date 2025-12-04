@@ -4,31 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ActivityDetail extends Model
 {
     protected $fillable = [
-        'activity_id',
-        'title',
-        'description',
-        'target_type',
-        'target_value',
-        'order',
+        'submission_id',
+        'field_type',
+        'field_name',
+        'field_label',
+        'field_value',
+        'is_checked',
     ];
 
     protected $casts = [
-        'target_value' => 'integer',
-        'order' => 'integer',
+        'is_checked' => 'boolean',
     ];
 
-    public function activity(): BelongsTo
+    public function submission(): BelongsTo
     {
-        return $this->belongsTo(Activity::class);
-    }
-
-    public function submissions(): HasMany
-    {
-        return $this->hasMany(ActivitySubmission::class);
+        return $this->belongsTo(ActivitySubmission::class, 'submission_id');
     }
 }

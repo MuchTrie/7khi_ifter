@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { dashboard } from '@/routes/siswa';
@@ -33,6 +33,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
     const [jamBangun, setJamBangun] = useState('');
     const [approvalOrangTua, setApprovalOrangTua] = useState(false);
     const [image, setImage] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Checkbox states
     const [membereskanTempat, setMembereskanTempat] = useState(false);
@@ -63,11 +64,50 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log({
-            tanggal: selectedDate,
-            jamBangun,
-            approvalOrangTua,
-            image
+        
+        if (!jamBangun) {
+            alert('Mohon isi jam bangun terlebih dahulu');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        // Create the date string in YYYY-MM-DD format
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        const formData = new FormData();
+        formData.append('activity_id', activity.id.toString());
+        formData.append('date', dateString);
+        formData.append('time', jamBangun);
+        formData.append('membereskan_tempat_tidur', membereskanTempat ? '1' : '0');
+        formData.append('mandi', mandi ? '1' : '0');
+        formData.append('berpakaian_rapi', berpakaianRapi ? '1' : '0');
+        formData.append('sarapan', sarapan ? '1' : '0');
+        
+        if (image) {
+            formData.append('photo', image);
+        }
+
+        router.post('/siswa/activities/bangun-pagi/submit', formData, {
+            onSuccess: () => {
+                alert('Kegiatan berhasil disimpan!');
+                // Reset form
+                setJamBangun('');
+                setMembereskanTempat(false);
+                setMandi(false);
+                setBerpakaianRapi(false);
+                setSarapan(false);
+                setImage(null);
+                setIsSubmitting(false);
+            },
+            onError: (errors) => {
+                console.error('Submission errors:', errors);
+                alert('Gagal menyimpan kegiatan. Silakan coba lagi.');
+                setIsSubmitting(false);
+            },
         });
     };
 
@@ -187,12 +227,14 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         value={jamBangun}
                                         onChange={(e) => setJamBangun(e.target.value)}
                                         className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-300 rounded-lg text-gray-900 text-sm sm:text-base hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        required
                                     />
                                     <Button
-                                        type="button"
-                                        className="bg-gray-800 hover:bg-gray-700 hover:scale-105 transition-all duration-200 text-white px-6 sm:px-8 py-2 shadow-md hover:shadow-lg text-sm sm:text-base"
+                                        type="submit"
+                                        disabled={isSubmitting || !jamBangun}
+                                        className="bg-gray-800 hover:bg-gray-700 hover:scale-105 transition-all duration-200 text-white px-6 sm:px-8 py-2 shadow-md hover:shadow-lg text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Submit
+                                        {isSubmitting ? 'Menyimpan...' : 'Submit'}
                                     </Button>
                                 </div>
                             </div>
