@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ActivitySubmission extends Model
 {
@@ -38,5 +39,10 @@ class ActivitySubmission extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(ParentModel::class, 'approved_by');
+    }
+
+    public function details(): HasMany
+    {
+        return $this->hasMany(ActivityDetail::class, 'submission_id');
     }
 }

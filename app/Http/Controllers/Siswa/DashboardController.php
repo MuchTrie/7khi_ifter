@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Models\ActivitySubmission;
+use App\Models\ActivityDetail;
+use App\Models\Student;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -153,8 +158,42 @@ class DashboardController extends Controller
     {
         $activity = Activity::where('title', 'LIKE', '%Bangun Pagi%')->firstOrFail();
 
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $student = Student::where('user_id', $user->id)->firstOrFail();
+
+        // Get all submissions for this activity
+        $submissions = ActivitySubmission::with('details')
+            ->where('student_id', $student->id)
+            ->where('activity_id', $activity->id)
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function ($submission) {
+                // Format the details as key-value pairs
+                $details = [];
+                foreach ($submission->details as $detail) {
+                    $details[$detail->field_name] = [
+                        'label' => $detail->field_label,
+                        'is_checked' => $detail->is_checked,
+                        'value' => $detail->field_value,
+                    ];
+                }
+
+                return [
+                    'id' => $submission->id,
+                    'date' => $submission->date->format('Y-m-d'),
+                    'time' => $submission->time,
+                    'photo' => $submission->photo,
+                    'status' => $submission->status,
+                    'approved_by' => $submission->approved_by,
+                    'approved_at' => $submission->approved_at,
+                    'details' => $details,
+                ];
+            });
+
         return Inertia::render('siswa/activities/history/bangun-pagi-history', [
             'activity' => $activity,
+            'submissions' => $submissions,
         ]);
     }
 
@@ -338,5 +377,100 @@ class DashboardController extends Controller
             'nextActivity' => $nextActivity,
             'previousActivity' => $previousActivity,
         ]);
+    }
+
+    /**
+     * Submit Bangun Pagi activity.
+     */
+    public function submitBangunPagi(Request $request)
+    {
+        $validated = $request->validate([
+            'activity_id' => 'required|exists:activities,id',
+            'date' => 'required|date',
+            'time' => 'required|date_format:H:i',
+            'membereskan_tempat_tidur' => 'boolean',
+            'mandi' => 'boolean',
+            'berpakaian_rapi' => 'boolean',
+            'sarapan' => 'boolean',
+            'photo' => 'nullable|image|max:2048',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        
+        // Get student record
+        $student = Student::where('user_id', $user->id)->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            // Handle photo upload if present
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('activity-photos', 'public');
+            }
+
+            // Create or update submission
+            $submission = ActivitySubmission::updateOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'activity_id' => $validated['activity_id'],
+                    'date' => $validated['date'],
+                ],
+                [
+                    'time' => $validated['time'],
+                    'photo' => $photoPath,
+                    'status' => 'pending',
+                ]
+            );
+
+            // Store activity details (checkboxes)
+            $details = [
+                [
+                    'field_type' => 'checkbox',
+                    'field_name' => 'membereskan_tempat_tidur',
+                    'field_label' => 'Membereskan Tempat Tidur',
+                    'is_checked' => $validated['membereskan_tempat_tidur'] ?? false,
+                ],
+                [
+                    'field_type' => 'checkbox',
+                    'field_name' => 'mandi',
+                    'field_label' => 'Mandi',
+                    'is_checked' => $validated['mandi'] ?? false,
+                ],
+                [
+                    'field_type' => 'checkbox',
+                    'field_name' => 'berpakaian_rapi',
+                    'field_label' => 'Berpakaian Rapi',
+                    'is_checked' => $validated['berpakaian_rapi'] ?? false,
+                ],
+                [
+                    'field_type' => 'checkbox',
+                    'field_name' => 'sarapan',
+                    'field_label' => 'Sarapan',
+                    'is_checked' => $validated['sarapan'] ?? false,
+                ],
+            ];
+
+            // Delete existing details for this submission
+            ActivityDetail::where('submission_id', $submission->id)->delete();
+
+            // Insert new details
+            foreach ($details as $detail) {
+                ActivityDetail::create([
+                    'submission_id' => $submission->id,
+                    'field_type' => $detail['field_type'],
+                    'field_name' => $detail['field_name'],
+                    'field_label' => $detail['field_label'],
+                    'is_checked' => $detail['is_checked'],
+                ]);
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Kegiatan berhasil disimpan!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal menyimpan kegiatan: ' . $e->getMessage()]);
+        }
     }
 }
