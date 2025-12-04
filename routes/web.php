@@ -73,6 +73,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('siswa/kelas/{classId}', [AdminDashboardController::class, 'classStudents'])->name('siswa.class');
         Route::get('siswa-management', [AdminDashboardController::class, 'siswaManagement'])->name('siswa.management');
         
+        // Student CRUD API
+        Route::post('students', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('students.store');
+        Route::put('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('students.update');
+        Route::delete('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('students.destroy');
+        Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
+        
         // Guru Routes
         Route::get('guru-dashboard', [AdminDashboardController::class, 'guruDashboard'])->name('guru.dashboard');
         Route::get('guru-management', [AdminDashboardController::class, 'guruManagement'])->name('guru.management');

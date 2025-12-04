@@ -13,6 +13,14 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'class_id',
+        'nis',
+        'nisn',
+        'gender',
+        'date_of_birth',
+        'religion',
+        'address',
+        'photo',
+        'is_active',
         'student_number',
         'enrollment_date',
         'status',
@@ -20,6 +28,8 @@ class Student extends Model
 
     protected $casts = [
         'enrollment_date' => 'date',
+        'date_of_birth' => 'date',
+        'is_active' => 'boolean',
     ];
 
     public function user(): BelongsTo
