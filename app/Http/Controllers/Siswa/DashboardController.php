@@ -109,6 +109,38 @@ class DashboardController extends Controller
     }
 
     /**
+     * Display the kegiatan harian page.
+     */
+    public function kegiatanHarian(): Response
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        
+        // Get student data
+        $student = Student::where('user_id', $user->id)->first();
+        
+        // Get all activities
+        $activities = Activity::orderBy('order')->get();
+        
+        // Get current month submissions for the student
+        if ($student) {
+            $submissions = ActivitySubmission::where('student_id', $student->id)
+                ->whereYear('date', now()->year)
+                ->whereMonth('date', now()->month)
+                ->with(['activity'])
+                ->get()
+                ->groupBy('activity_id');
+        } else {
+            $submissions = collect();
+        }
+        
+        return Inertia::render('siswa/kegiatan-harian', [
+            'activities' => $activities,
+            'submissions' => $submissions,
+        ]);
+    }
+
+    /**
      * Display the beribadah history page.
      * "Berbakti" in database is actually "Beribadah" with muslim/non-muslim variants
      */

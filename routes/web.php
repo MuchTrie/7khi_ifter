@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('biodata', [SiswaDashboardController::class, 'biodata'])->name('biodata');
         Route::get('biodata/edit', [SiswaDashboardController::class, 'biodataEdit'])->name('biodata.edit');
         Route::get('lagu', [SiswaDashboardController::class, 'lagu'])->name('lagu');
+        Route::get('kegiatan-harian', [SiswaDashboardController::class, 'kegiatanHarian'])->name('kegiatan-harian');
 
         // Activity History Routes (MUST be before detail routes to avoid route conflicts)
         Route::get('activities/berbakti/history', [SiswaDashboardController::class, 'berbaktiHistory'])->name('activities.berbakti.history');

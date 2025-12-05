@@ -11,7 +11,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { dashboard as siswaDashboard, biodata as siswaBiodata, lagu as siswaLagu } from '@/routes/siswa';
+import { dashboard as siswaDashboard, biodata as siswaBiodata, lagu as siswaLagu, kegiatanHarian as siswaKegiatanHarian } from '@/routes/siswa';
 import { dashboard as guruDashboard } from '@/routes/guru';
 import { dashboard as orangtuaDashboard } from '@/routes/orangtua';
 import { type NavItem, type SharedData } from '@/types';
@@ -45,7 +45,7 @@ const siswaNavItems: NavItem[] = [
     },
     {
         title: 'Kegiatan Harian',
-        href: siswaDashboard(),
+        href: siswaKegiatanHarian(),
         icon: Calendar,
     },
 ];
