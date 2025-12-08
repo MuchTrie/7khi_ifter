@@ -86,11 +86,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Siswa Routes
         Route::get('siswa-dashboard', [AdminDashboardController::class, 'siswaDashboard'])->name('siswa.dashboard');
         Route::get('siswa/kelas/{classId}', [AdminDashboardController::class, 'classStudents'])->name('siswa.class');
+        Route::get('siswa/kelas/{classId}/create', [AdminDashboardController::class, 'createStudent'])->name('siswa.create');
+        Route::get('siswa/create-account', [AdminDashboardController::class, 'createStudentAccount'])->name('siswa.create-account');
         Route::get('siswa-management', [AdminDashboardController::class, 'siswaManagement'])->name('siswa.management');
 
         // Student CRUD API
         Route::post('students', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('students.store');
         Route::put('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('students.update');
+        Route::put('students/{student}/assign-class', [\App\Http\Controllers\Admin\StudentController::class, 'assignClass'])->name('students.assign-class');
         Route::delete('students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('students.destroy');
         Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
 

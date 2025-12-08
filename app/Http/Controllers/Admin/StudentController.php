@@ -18,7 +18,7 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => 'nullable|exists:classes,id',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'nis' => 'required|string|unique:students,nis',
@@ -41,7 +41,7 @@ class StudentController extends Controller
         // Create student record
         $student = Student::create([
             'user_id' => $user->id,
-            'class_id' => $validated['class_id'],
+            'class_id' => $validated['class_id'] ?? null,
             'nis' => $validated['nis'],
             'nisn' => $validated['nisn'] ?? null,
             'gender' => $validated['gender'],
@@ -60,6 +60,30 @@ class StudentController extends Controller
                 'nis' => $student->nis,
                 'religion' => $student->religion,
                 'gender' => $student->gender,
+            ],
+        ]);
+    }
+
+    /**
+     * Assign student to a class.
+     */
+    public function assignClass(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'class_id' => 'required|exists:classes,id',
+        ]);
+
+        $student->update([
+            'class_id' => $validated['class_id'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Siswa berhasil ditambahkan ke kelas',
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->user->name,
+                'class_id' => $student->class_id,
             ],
         ]);
     }
@@ -117,10 +141,10 @@ class StudentController extends Controller
     {
         // Store user for deletion
         $user = $student->user;
-        
+
         // Delete student record
         $student->delete();
-        
+
         // Delete user account
         $user->delete();
 
@@ -150,7 +174,7 @@ class StudentController extends Controller
             try {
                 // Generate email from name
                 $email = $this->generateEmailFromName($studentData['name']);
-                
+
                 // Create user account
                 $user = User::create([
                     'name' => $studentData['name'],
