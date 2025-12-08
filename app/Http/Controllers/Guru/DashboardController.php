@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ClassModel;
 use App\Models\Student;
+use App\Models\Activity;
 use App\Models\ActivitySubmission;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,20 +23,43 @@ class DashboardController extends Controller
         // Get classes taught by this teacher
         $teacherClasses = ClassModel::where('teacher_id', $currentUser->id)
             ->with(['students.user', 'students.biodata'])
+            ->orderBy('name')
             ->get();
 
-        // Collect all students from teacher's classes
+        // Prepare classes data with student count and academic year
+        $classesData = $teacherClasses->map(function ($class) {
+            return [
+                'id' => $class->id,
+                'name' => $class->name,
+                'grade' => $class->grade,
+                'section' => $class->section,
+                'academic_year' => $class->academic_year,
+                'student_count' => $class->students->count(),
+            ];
+        });
+
+        // Get selected class from request or use the first one
+        $selectedClassId = request()->query('class_id');
+        
+        if ($selectedClassId) {
+            $selectedClass = $teacherClasses->firstWhere('id', (int)$selectedClassId);
+        } else {
+            $selectedClass = $teacherClasses->first();
+        }
+
+        // Collect all students from selected class
         $students = [];
         $studentJournals = [];
 
-        foreach ($teacherClasses as $class) {
-            foreach ($class->students as $student) {
+        if ($selectedClass) {
+            foreach ($selectedClass->students as $student) {
                 $studentUser = $student->user;
                 if ($studentUser) {
                     $studentData = [
                         'id' => $studentUser->id,
                         'name' => strtoupper($studentUser->name),
-                        'class' => $class->name,
+                        'class' => $selectedClass->name,
+                        'nis' => $student->nis ?? '-',
                         'religion' => $student->religion ?? 'ISLAM',
                         'gender' => $student->gender ?? 'L',
                     ];
@@ -63,7 +87,18 @@ class DashboardController extends Controller
             }
         }
 
+        $selectedClassData = $selectedClass ? [
+            'id' => $selectedClass->id,
+            'name' => $selectedClass->name,
+            'grade' => $selectedClass->grade,
+            'section' => $selectedClass->section,
+            'academic_year' => $selectedClass->academic_year,
+            'student_count' => $selectedClass->students->count(),
+        ] : null;
+
         return Inertia::render('guru/dashboard', [
+            'classes' => $classesData,
+            'selectedClass' => $selectedClassData,
             'students' => $students,
             'studentJournals' => $studentJournals,
         ]);
@@ -74,30 +109,63 @@ class DashboardController extends Controller
      */
     public function showStudentActivities(int $studentId): Response
     {
-        $student = User::where('role', User::ROLE_SISWA)
-            ->findOrFail($studentId);
+        $user = User::findOrFail($studentId);
+        $student = Student::where('user_id', $studentId)->firstOrFail();
 
-        // TODO: Get actual activities from database
-        // For now, return mock data
-        $activities = [
-            ['id' => 1, 'title' => 'Bangun Pagi', 'icon' => '☀️', 'color' => 'bg-orange-100', 'completed' => true],
-            ['id' => 2, 'title' => 'Berbakti', 'icon' => '🙏', 'color' => 'bg-blue-100', 'completed' => true],
-            ['id' => 3, 'title' => 'Berolahraga', 'icon' => '⚽', 'color' => 'bg-green-100', 'completed' => true],
-            ['id' => 4, 'title' => 'Gemar Belajar', 'icon' => '📚', 'color' => 'bg-yellow-100', 'completed' => false],
-            ['id' => 5, 'title' => 'Makan Makanan Sehat dan Bergizi', 'icon' => '🍎', 'color' => 'bg-pink-100', 'completed' => true],
-            ['id' => 6, 'title' => 'Bermasyarakat', 'icon' => '👨‍👩‍👧‍👦', 'color' => 'bg-purple-100', 'completed' => false],
-        ];
+        // Get all activities from database ordered by order column
+        $activitiesFromDb = Activity::orderBy('order')->get();
+        
+        $activities = $activitiesFromDb->map(function ($activity) use ($student) {
+            // Check if student has submitted this activity today
+            $todaySubmission = ActivitySubmission::where('student_id', $student->id)
+                ->where('activity_id', $activity->id)
+                ->whereDate('date', today())
+                ->exists();
+
+            return [
+                'id' => $activity->id,
+                'title' => $activity->title,
+                'icon' => $activity->icon,
+                'color' => $activity->color,
+                'completed' => $todaySubmission,
+            ];
+        })->toArray();
 
         return Inertia::render('guru/student-activities', [
             'student' => [
-                'id' => $student->id,
-                'name' => $student->name,
-                'religion' => 'ISLAM', // TODO: Add religion field
-                'gender' => 'L', // TODO: Add gender field
-                'progress' => 78,
+                'id' => $user->id,
+                'name' => $user->name,
+                'religion' => $student->religion ?? 'ISLAM',
+                'gender' => $student->gender ?? 'L',
+                'progress' => $this->getStudentProgress($student->id),
             ],
             'activities' => $activities,
         ]);
+    }
+
+    /**
+     * Calculate student progress percentage for current month.
+     */
+    private function getStudentProgress(int $studentId): int
+    {
+        $today = today();
+        $startOfMonth = $today->copy()->startOfMonth();
+        $endOfMonth = $today->copy()->endOfMonth();
+
+        // Get total possible submissions (7 activities per day)
+        $daysPassed = $today->diffInDays($startOfMonth) + 1;
+        $totalPossible = $daysPassed * 7;
+
+        // Get actual submissions
+        $actualSubmissions = ActivitySubmission::where('student_id', $studentId)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->count();
+
+        if ($totalPossible === 0) {
+            return 0;
+        }
+
+        return (int)round(($actualSubmissions / $totalPossible) * 100);
     }
 
     /**
@@ -165,29 +233,41 @@ class DashboardController extends Controller
      */
     public function showStudentBiodata(int $studentId): Response
     {
-        $student = User::where('role', User::ROLE_SISWA)
-            ->findOrFail($studentId);
+        $user = User::findOrFail($studentId);
+        $student = Student::where('user_id', $studentId)->firstOrFail();
+        $biodata = $student->biodata;
 
-        // TODO: Get actual biodata from database
-        // For now, return mock data
-        $biodata = [
+        $biodataArray = $biodata ? [
+            'hobbies' => array_filter(explode(',', $biodata->hobi ?? '')),
+            'aspirations' => array_filter([$biodata->cita_cita ?? '']),
+            'favorite_foods' => array_filter([$biodata->makanan_kesukaan ?? '']),
+            'disliked_foods' => [],
+            'favorite_animals' => array_filter([$biodata->hewan_kesukaan ?? '']),
+            'disliked_items' => array_filter(explode(',', $biodata->sesuatu_tidak_suka ?? '')),
+            'favorite_drinks' => array_filter([$biodata->minuman_kesukaan ?? '']),
+        ] : [
             'hobbies' => [],
             'aspirations' => [],
             'favorite_foods' => [],
             'disliked_foods' => [],
             'favorite_animals' => [],
             'disliked_items' => [],
+            'favorite_drinks' => [],
         ];
 
         return Inertia::render('guru/student-biodata', [
             'student' => [
-                'id' => $student->id,
-                'name' => $student->name,
-                'religion' => 'ISLAM', // TODO: Add religion field
-                'gender' => 'L', // TODO: Add gender field
-                'photo' => null, // TODO: Add photo field
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email ?? '-',
+                'religion' => $student->religion ?? '-',
+                'gender' => $student->gender ?? '-',
+                'nis' => $student->nis ?? '-',
+                'birth_date' => $student->date_of_birth ? $student->date_of_birth->format('d-m-Y') : '-',
+                'address' => $student->address ?? '-',
+                'photo' => $student->photo ?? null,
             ],
-            'biodata' => $biodata,
+            'biodata' => $biodataArray,
         ]);
     }
 }
