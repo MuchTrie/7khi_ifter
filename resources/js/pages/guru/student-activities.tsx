@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -39,11 +38,12 @@ export default function StudentActivities({ auth, student, activities = [] }: St
     // Mock activities jika tidak ada dari backend
     const activitiesList: Activity[] = activities.length > 0 ? activities : [
         { id: 1, title: 'Bangun Pagi', icon: '☀️', color: 'bg-orange-100', completed: true },
-        { id: 2, title: 'Berbakti', icon: '🙏', color: 'bg-blue-100', completed: true },
+        { id: 2, title: 'Beribadah', icon: '🙏', color: 'bg-blue-100', completed: true },
         { id: 3, title: 'Berolahraga', icon: '⚽', color: 'bg-green-100', completed: true },
         { id: 4, title: 'Gemar Belajar', icon: '📚', color: 'bg-yellow-100', completed: false },
         { id: 5, title: 'Makan Makanan Sehat dan Bergizi', icon: '🍎', color: 'bg-pink-100', completed: true },
         { id: 6, title: 'Bermasyarakat', icon: '👨‍👩‍👧‍👦', color: 'bg-purple-100', completed: false },
+        { id: 7, title: 'Tidur Cepat', icon: '🌙', color: 'bg-indigo-100', completed: true },
     ];
 
     const completedCount = activitiesList.filter(a => a.completed).length;
@@ -144,19 +144,16 @@ export default function StudentActivities({ auth, student, activities = [] }: St
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <Button
-                                                className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
+                                            <button
+                                                className="px-4 md:px-6 py-2 md:py-3 bg-blue-100 text-blue-600 rounded-lg font-medium text-sm md:text-base hover:bg-blue-200 transition-colors cursor-not-allowed opacity-60 flex-1 sm:flex-none"
                                                 disabled
                                             >
                                                 Lihat Nilai
-                                            </Button>
-                                            <Link href={`/guru/siswa/${student.id}/biodata`}>
-                                                <Button
-                                                    variant="outline"
-                                                    className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full"
-                                                >
+                                            </button>
+                                            <Link href={`/guru/siswa/${student.id}/biodata`} className="flex-1 sm:flex-none">
+                                                <button className="w-full px-4 md:px-6 py-2 md:py-3 bg-gray-900 text-white rounded-lg font-medium text-sm md:text-base hover:bg-gray-800 transition-colors">
                                                     Biodata Murid
-                                                </Button>
+                                                </button>
                                             </Link>
                                         </div>
                                     </div>
@@ -283,10 +280,10 @@ export default function StudentActivities({ auth, student, activities = [] }: St
                     {/* Back Button */}
                     <div className="mt-6">
                         <Link href="/guru/dashboard">
-                            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
+                            <button className="px-4 md:px-6 py-2 md:py-3 bg-gray-900 text-white rounded-lg font-medium text-sm md:text-base hover:bg-gray-800 transition-colors inline-flex items-center gap-2">
+                                <ArrowLeft className="w-4 h-4" />
                                 Kembali ke Dashboard
-                            </Button>
+                            </button>
                         </Link>
                     </div>
                 </div>
