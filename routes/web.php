@@ -109,6 +109,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Orang Tua Routes
         Route::get('orangtua-dashboard', [AdminDashboardController::class, 'orangtuaDashboard'])->name('orangtua.dashboard');
         Route::get('orangtua/kelas/{classId}', [AdminDashboardController::class, 'classParents'])->name('orangtua.class');
+        Route::get('orangtua/kelas/{classId}/create', [AdminDashboardController::class, 'createParent'])->name('orangtua.create');
+        Route::post('orangtua/store', [AdminDashboardController::class, 'storeParent'])->name('orangtua.store');
+        Route::get('orangtua/{parentId}/edit', [AdminDashboardController::class, 'editParent'])->name('orangtua.edit');
+        Route::put('orangtua/{parentId}/update', [AdminDashboardController::class, 'updateParent'])->name('orangtua.update');
+        Route::delete('orangtua/{parentId}/delete', [AdminDashboardController::class, 'deleteParent'])->name('orangtua.delete');
         Route::get('orangtua-management', [AdminDashboardController::class, 'orangtuaManagement'])->name('orangtua.management');
     });
 });

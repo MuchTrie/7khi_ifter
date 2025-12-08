@@ -1,10 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import ParentFormModal from './_components/ParentFormModal';
 import ParentsTable from './_components/ParentsTable';
 import SearchBar from './_components/SearchBar';
-import { ClassParentsProps, FormData, Parent } from './types';
+import { ClassParentsProps, Parent } from './types';
 
 export default function ClassParents({
     auth,
@@ -13,142 +12,43 @@ export default function ClassParents({
     parents,
 }: ClassParentsProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-        parentName: '',
-        studentName: '',
-        studentClass: '',
-    });
-
-    // Mock data jika backend belum siap
-    const mockParents: Parent[] = [
-        {
-            id: 1,
-            parentName: 'Orang Tua 1',
-            studentName: 'Ahmad Fauzi',
-            studentClass: '7 A',
-        },
-        {
-            id: 2,
-            parentName: 'Orang Tua 2',
-            studentName: 'Siti Nurhaliza',
-            studentClass: '7 B',
-        },
-        {
-            id: 3,
-            parentName: 'Orang Tua 3',
-            studentName: 'Budi Santoso',
-            studentClass: '7 C',
-        },
-        {
-            id: 4,
-            parentName: 'Orang Tua 4',
-            studentName: 'Dewi Lestari',
-            studentClass: '7 D',
-        },
-        {
-            id: 5,
-            parentName: 'Orang Tua 5',
-            studentName: 'Eko Prasetyo',
-            studentClass: '8 A',
-        },
-        {
-            id: 6,
-            parentName: 'Orang Tua 6',
-            studentName: 'Fitri Handayani',
-            studentClass: '8 B',
-        },
-        {
-            id: 7,
-            parentName: 'Orang Tua 7',
-            studentName: 'Galih Pratama',
-            studentClass: '8 C',
-        },
-        {
-            id: 8,
-            parentName: 'Orang Tua 8',
-            studentName: 'Hani Safitri',
-            studentClass: '8 D',
-        },
-        {
-            id: 9,
-            parentName: 'Orang Tua 9',
-            studentName: 'Irfan Hakim',
-            studentClass: '9 A',
-        },
-        {
-            id: 10,
-            parentName: 'Orang Tua 10',
-            studentName: 'Jasmine Putri',
-            studentClass: '9 B',
-        },
-        {
-            id: 11,
-            parentName: 'Orang Tua 11',
-            studentName: 'Kirana Azzahra',
-            studentClass: '9 C',
-        },
-    ];
-
-    const displayParents =
-        parents && parents.length > 0 ? parents : mockParents;
 
     // Filter orang tua berdasarkan search
-    const filteredParents = displayParents.filter(
+    const filteredParents = (parents || []).filter(
         (parent) =>
             parent.parentName
                 .toLowerCase()
                 .includes(searchQuery.toLowerCase()) ||
-            parent.studentName
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()),
+            (parent.studentName &&
+                parent.studentName
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())),
     );
 
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    ) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const openEditModal = (parent: Parent) => {
-        setSelectedParent(parent);
-        setFormData({
-            parentName: parent.parentName,
-            studentName: parent.studentName,
-            studentClass: parent.studentClass,
-        });
-        setShowEditModal(true);
-    };
-
-    const handleAddSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Add parent submitted:', formData);
-        // TODO: Kirim data ke backend
-        alert(`Orang Tua ${formData.parentName} berhasil ditambahkan`);
-        setFormData({ parentName: '', studentName: '', studentClass: '' });
-        setShowAddModal(false);
-    };
-
-    const handleEditSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Edit parent submitted:', formData);
-        // TODO: Kirim data ke backend
-        alert(`Orang Tua ${formData.parentName} berhasil diperbarui`);
-        setFormData({ parentName: '', studentName: '', studentClass: '' });
-        setShowEditModal(false);
-        setSelectedParent(null);
+    const openEditPage = (parent: Parent) => {
+        // Navigate to edit page
+        window.location.href = `/admin/orangtua/${parent.id}/edit?classId=${classId}`;
     };
 
     const handleDelete = (parent: Parent) => {
-        // TODO: Implement delete functionality
-        console.log('Delete parent:', parent);
-        alert(`Hapus data ${parent.parentName}?`);
+        if (
+            confirm(
+                `Apakah Anda yakin ingin menghapus akun orang tua "${parent.parentName}"?\n\nData yang akan dihapus:\n- Akun user\n- Data orang tua\n- Relasi dengan anak\n\nTindakan ini tidak dapat dibatalkan!`,
+            )
+        ) {
+            router.delete(`/admin/orangtua/${parent.id}/delete`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert('Akun orang tua berhasil dihapus!');
+                },
+                onError: (errors) => {
+                    alert(
+                        'Gagal menghapus akun: ' +
+                            (errors.error || 'Terjadi kesalahan'),
+                    );
+                },
+            });
+        }
     };
 
     return (
@@ -191,37 +91,17 @@ export default function ClassParents({
                     <SearchBar
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
-                        onAddClick={() => setShowAddModal(true)}
+                        onAddClick={() =>
+                            (window.location.href = `/admin/orangtua/kelas/${classId}/create`)
+                        }
                     />
 
                     {/* Parents Table */}
                     <ParentsTable
                         parents={filteredParents}
-                        onEdit={openEditModal}
+                        onEdit={openEditPage}
                         onDelete={handleDelete}
                     />
-
-                    {/* Add Modal */}
-                    <ParentFormModal
-                        isOpen={showAddModal}
-                        onClose={() => setShowAddModal(false)}
-                        onSubmit={handleAddSubmit}
-                        formData={formData}
-                        onInputChange={handleInputChange}
-                        mode="add"
-                    />
-
-                    {/* Edit Modal */}
-                    {selectedParent && (
-                        <ParentFormModal
-                            isOpen={showEditModal}
-                            onClose={() => setShowEditModal(false)}
-                            onSubmit={handleEditSubmit}
-                            formData={formData}
-                            onInputChange={handleInputChange}
-                            mode="edit"
-                        />
-                    )}
                 </div>
             </div>
         </AppLayout>
