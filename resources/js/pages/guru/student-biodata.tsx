@@ -53,15 +53,15 @@ export default function StudentBiodata({ auth, student, biodata }: StudentBiodat
 
                         {/* Breadcrumb */}
                         <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 mb-4">
-                            <Link href="/guru/dashboard" className="hover:text-blue-600">
+                            <Link href="/guru/dashboard" className="hover:text-blue-600 truncate">
                                 Dashboard
                             </Link>
                             <span>/</span>
-                            <Link href={`/guru/siswa/${student.id}/activities`} className="hover:text-blue-600">
+                            <Link href={`/guru/siswa/${student.id}/activities`} className="hover:text-blue-600 truncate">
                                 Siswa {student.name}
                             </Link>
                             <span>/</span>
-                            <span className="text-gray-900 font-medium">Biodata Murid</span>
+                            <span className="text-gray-900 font-medium truncate">Biodata Murid</span>
                         </div>
                     </div>
 

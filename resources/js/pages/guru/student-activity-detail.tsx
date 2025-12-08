@@ -92,7 +92,20 @@ export default function StudentActivityDetail({ auth, student, activity }: Activ
                             <h1 className="text-xl md:text-2xl font-bold text-blue-700">Jurnal Harian</h1>
                         </div>
 
-                        <h2 className="text-base md:text-xl text-gray-600 mb-2">Kegiatan {activity.id} {activity.title} - {student.name}</h2>
+                        <h2 className="text-base md:text-xl text-gray-600 mb-4">Kegiatan {activity.id} {activity.title} - {student.name}</h2>
+
+                        {/* Breadcrumb */}
+                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 mb-4">
+                            <Link href="/guru/dashboard" className="hover:text-blue-600 truncate">
+                                Dashboard
+                            </Link>
+                            <span>/</span>
+                            <Link href={`/guru/siswa/${student.id}/activities`} className="hover:text-blue-600 truncate">
+                                Siswa {student.name}
+                            </Link>
+                            <span>/</span>
+                            <span className="text-gray-900 font-medium truncate">Kegiatan {activity.id}</span>
+                        </div>
                     </div>
 
                     {/* Main Content */}
@@ -318,10 +331,10 @@ export default function StudentActivityDetail({ auth, student, activity }: Activ
                     {/* Back Button */}
                     <div className="mt-6">
                         <Link href={`/guru/siswa/${student.id}/activities`}>
-                            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
+                            <button className="px-4 md:px-6 py-2 md:py-3 bg-gray-900 text-white rounded-lg font-medium text-sm md:text-base hover:bg-gray-800 transition-colors inline-flex items-center gap-2">
+                                <ArrowLeft className="w-4 h-4" />
                                 Kembali
-                            </Button>
+                            </button>
                         </Link>
                     </div>
                 </div>

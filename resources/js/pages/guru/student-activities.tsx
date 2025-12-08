@@ -144,12 +144,6 @@ export default function StudentActivities({ auth, student, activities = [] }: St
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <button
-                                                className="px-4 md:px-6 py-2 md:py-3 bg-blue-100 text-blue-600 rounded-lg font-medium text-sm md:text-base hover:bg-blue-200 transition-colors cursor-not-allowed opacity-60 flex-1 sm:flex-none"
-                                                disabled
-                                            >
-                                                Lihat Nilai
-                                            </button>
                                             <Link href={`/guru/siswa/${student.id}/biodata`} className="flex-1 sm:flex-none">
                                                 <button className="w-full px-4 md:px-6 py-2 md:py-3 bg-gray-900 text-white rounded-lg font-medium text-sm md:text-base hover:bg-gray-800 transition-colors">
                                                     Biodata Murid
