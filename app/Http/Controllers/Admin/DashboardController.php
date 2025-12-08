@@ -289,10 +289,11 @@ class DashboardController extends Controller
                 if (!$parentsCollection->contains('id', $parent->id)) {
                     $parentsCollection->push([
                         'id' => $parent->id,
-                        'name' => $parent->user->name ?? 'N/A',
+                        'parentName' => $parent->user->name ?? 'N/A',
                         'email' => $parent->user->email ?? 'N/A',
                         'phone' => $parent->phone ?? 'N/A',
                         'studentName' => $student->user->name ?? 'N/A',
+                        'studentClass' => $class->name ?? 'N/A',
                     ]);
                 }
             }
