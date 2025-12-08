@@ -1,4 +1,3 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -11,12 +10,25 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { dashboard as siswaDashboard, biodata as siswaBiodata, lagu as siswaLagu, kegiatanHarian as siswaKegiatanHarian } from '@/routes/siswa';
 import { dashboard as guruDashboard } from '@/routes/guru';
 import { dashboard as orangtuaDashboard } from '@/routes/orangtua';
+import {
+    biodata as siswaBiodata,
+    dashboard as siswaDashboard,
+    kegiatanHarian as siswaKegiatanHarian,
+    lagu as siswaLagu,
+} from '@/routes/siswa';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, User, Music, Calendar, Users, GraduationCap, UserCog, ClipboardCheck, School } from 'lucide-react';
+import {
+    Calendar,
+    LayoutGrid,
+    Music,
+    School,
+    User,
+    UserCog,
+    Users,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -67,16 +79,28 @@ const adminNavItems: NavItem[] = [
         icon: Users,
         items: [
             {
-                title: 'Siswa',
+                title: 'Dashboard Siswa',
                 href: '/admin/siswa-dashboard',
             },
             {
-                title: 'Guru',
+                title: 'Dashboard Guru',
                 href: '/admin/guru-dashboard',
             },
             {
-                title: 'Orang Tua',
+                title: 'Dashboard Orang Tua',
                 href: '/admin/orangtua-dashboard',
+            },
+            {
+                title: 'Management Siswa',
+                href: '/admin/siswa-management',
+            },
+            {
+                title: 'Management Guru',
+                href: '/admin/guru-management',
+            },
+            {
+                title: 'Management Orang Tua',
+                href: '/admin/orangtua-management',
             },
         ],
     },
@@ -103,9 +127,7 @@ const orangtuaNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-
-];
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
@@ -130,11 +152,19 @@ export function AppSidebar() {
     }
 
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-[#344460] border-r-0">
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            className="border-r-0 bg-[#344460]"
+        >
             <SidebarHeader className="border-b border-white/20 pt-3 pb-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="hover:bg-white/10 group-data-[collapsible=icon]:mt-1">
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
+                            className="group-data-[collapsible=icon]:mt-1 hover:bg-white/10"
+                        >
                             <Link href={logoHref} prefetch>
                                 <AppLogo />
                             </Link>
