@@ -90,17 +90,16 @@ const adminNavItems: NavItem[] = [
                 title: 'Dashboard Orang Tua',
                 href: '/admin/orangtua-dashboard',
             },
+        ],
+    },
+    {
+        title: 'Akun Siswa',
+        href: '#',
+        icon: Users,
+        items: [
             {
-                title: 'Management Siswa',
-                href: '/admin/siswa-management',
-            },
-            {
-                title: 'Management Guru',
-                href: '/admin/guru-management',
-            },
-            {
-                title: 'Management Orang Tua',
-                href: '/admin/orangtua-management',
+                title: 'Tambah Akun Siswa',
+                href: '/admin/siswa/create-account',
             },
         ],
     },

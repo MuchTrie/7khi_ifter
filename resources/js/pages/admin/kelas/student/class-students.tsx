@@ -5,9 +5,9 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ActionBar from './_components/ActionBar';
 import ImportModal from './_components/ImportModal';
-import StudentFormModal from './_components/StudentFormModal';
 import StudentsTable from './_components/StudentsTable';
 import StudentViewModal from './_components/StudentViewModal';
+import StudentFormModal from './_components/StudentFormModal';
 import {
     ClassStudentsProps,
     FormData,
@@ -26,10 +26,10 @@ if (csrfToken) {
 export default function ClassStudents({
     className,
     classDbId,
+    classId,
     students,
 }: ClassStudentsProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [showAddModal, setShowAddModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
@@ -258,51 +258,6 @@ export default function ClassStudents({
         XLSX.writeFile(workbook, fileName);
     };
 
-    const handleAddSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (isSubmitting) return;
-        setIsSubmitting(true);
-
-        try {
-            const response = await axios.post('/admin/students', {
-                class_id: classDbId,
-                name: formData.name,
-                email: formData.email,
-                nis: formData.nis,
-                nisn: formData.nisn || null,
-                religion: formData.religion,
-                gender: formData.gender,
-                date_of_birth: formData.date_of_birth || null,
-                address: formData.address || null,
-            });
-
-            if (response.data.success) {
-                router.reload({ only: ['students'] });
-                alert('Siswa berhasil ditambahkan');
-                setFormData({
-                    name: '',
-                    email: '',
-                    nis: '',
-                    nisn: '',
-                    religion: '',
-                    gender: '',
-                    date_of_birth: '',
-                    address: '',
-                });
-                setShowAddModal(false);
-            }
-        } catch (error) {
-            const message =
-                (error as { response?: { data?: { message?: string } } })
-                    .response?.data?.message ||
-                'Terjadi kesalahan saat menambahkan siswa';
-            alert(message);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -442,7 +397,7 @@ export default function ClassStudents({
                     <ActionBar
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
-                        onAddClick={() => setShowAddModal(true)}
+                        onAddClick={() => router.visit(`/admin/siswa/kelas/${classId}/create`)}
                         onImportClick={() => setShowImportModal(true)}
                     />
 
@@ -453,17 +408,6 @@ export default function ClassStudents({
                         onEdit={openEditModal}
                         onDelete={handleDeleteStudent}
                         onExport={downloadCSVTemplate}
-                    />
-
-                    {/* Modal Tambah Siswa */}
-                    <StudentFormModal
-                        isOpen={showAddModal}
-                        onClose={() => setShowAddModal(false)}
-                        onSubmit={handleAddSubmit}
-                        formData={formData}
-                        onInputChange={handleInputChange}
-                        mode="add"
-                        isSubmitting={isSubmitting}
                     />
 
                     {/* Modal Lihat Detail Siswa */}

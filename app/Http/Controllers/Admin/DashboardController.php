@@ -140,6 +140,72 @@ class DashboardController extends Controller
     }
 
     /**
+     * Display create student page for a specific class.
+     */
+    public function createStudent(string $classId): Response
+    {
+        // Parse classId (format: "1a", "2b") to get grade and section
+        $grade = (int) substr($classId, 0, 1);
+        $section = strtoupper(substr($classId, 1));
+
+        // Find the class
+        $class = \App\Models\ClassModel::where('grade', $grade)
+            ->where('section', $section)
+            ->first();
+
+        if (!$class) {
+            abort(404, 'Kelas tidak ditemukan');
+        }
+
+        $className = 'Kelas ' . $class->name;
+
+        // Get students without class (unassigned)
+        $unassignedStudents = \App\Models\Student::whereNull('class_id')
+            ->with('user')
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->user->name ?? 'N/A',
+                    'email' => $student->user->email ?? 'N/A',
+                    'nis' => $student->nis ?? 'N/A',
+                    'nisn' => $student->nisn ?? 'N/A',
+                    'religion' => $student->religion ?? 'N/A',
+                    'gender' => $student->gender ?? 'N/A',
+                ];
+            });
+
+        return Inertia::render('admin/kelas/student/create-student', [
+            'className' => $className,
+            'classId' => $classId,
+            'classDbId' => $class->id,
+            'unassignedStudents' => $unassignedStudents,
+        ]);
+    }
+
+    /**
+     * Display create account page for students.
+     */
+    public function createStudentAccount(): Response
+    {
+        $classes = \App\Models\ClassModel::orderBy('grade')
+            ->orderBy('section')
+            ->get()
+            ->map(function ($class) {
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'grade' => $class->grade,
+                    'section' => $class->section,
+                ];
+            });
+
+        return Inertia::render('admin/student/create-account', [
+            'classes' => $classes,
+        ]);
+    }
+
+    /**
      * Display siswa management page.
      */
     public function siswaManagement(): Response
