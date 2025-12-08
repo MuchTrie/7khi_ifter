@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ParentModel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -369,7 +373,321 @@ class DashboardController extends Controller
             'className' => $className,
             'classId' => $classId,
             'parents' => $parentsCollection->values(),
+            'allClasses' => \App\Models\ClassModel::with(['students.user'])
+                ->get()
+                ->map(function ($class) {
+                    return [
+                        'id' => $class->id,
+                        'name' => $class->name,
+                        'students' => $class->students->map(function ($student) {
+                            return [
+                                'id' => $student->id,
+                                'name' => $student->user->name ?? 'N/A',
+                                'class_id' => $student->class_id,
+                            ];
+                        }),
+                    ];
+                }),
         ]);
+    }
+
+    /**
+     * Display create parent form.
+     */
+    public function createParent(string $classId): Response
+    {
+        // Parse classId (format: "1a", "2b") to get grade and section
+        $grade = (int) substr($classId, 0, 1);
+        $section = strtoupper(substr($classId, 1));
+
+        // Find the class
+        $class = \App\Models\ClassModel::where('grade', $grade)
+            ->where('section', $section)
+            ->first();
+
+        if (!$class) {
+            abort(404, 'Kelas tidak ditemukan');
+        }
+
+        $className = 'Kelas ' . $class->name;
+
+        return Inertia::render('admin/kelas/parent/create-parent', [
+            'className' => $className,
+            'classId' => $classId,
+            'allClasses' => \App\Models\ClassModel::with(['students.user'])
+                ->get()
+                ->map(function ($class) {
+                    return [
+                        'id' => $class->id,
+                        'name' => $class->name,
+                        'students' => $class->students->map(function ($student) {
+                            return [
+                                'id' => $student->id,
+                                'name' => $student->user->name ?? 'N/A',
+                                'class_id' => $student->class_id,
+                            ];
+                        }),
+                    ];
+                }),
+        ]);
+    }
+
+    /**
+     * Store parent data to database.
+     */
+    public function storeParent(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:50|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'occupation' => 'nullable|string|max:100',
+            'children' => 'required|array|min:1',
+            'children.*.classId' => 'required|exists:classes,id',
+            'children.*.studentId' => 'required|exists:students,id',
+            'children.*.relationship' => 'required|in:ayah,ibu,wali',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Create User account for parent
+            $user = User::create([
+                'name' => $validated['name'],
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'password' => Hash::make('password123'), // Default password
+                'role' => User::ROLE_ORANGTUA,
+            ]);
+
+            // 2. Create Parent record
+            $parent = ParentModel::create([
+                'user_id' => $user->id,
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'occupation' => $validated['occupation'],
+            ]);
+
+            // 3. Attach students to parent with relationship
+            foreach ($validated['children'] as $child) {
+                DB::table('parent_student')->insert([
+                    'parent_id' => $parent->id,
+                    'student_id' => $child['studentId'],
+                    'relationship' => $child['relationship'],
+                    'is_primary' => false, // Set first child as primary if needed
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.orangtua.class', ['classId' => $request->input('classId')])
+                ->with('success', 'Akun orang tua berhasil dibuat!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Gagal membuat akun: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Display edit parent form.
+     */
+    public function editParent(int $parentId): Response
+    {
+        // Find the parent with user and students relationships
+        $parent = ParentModel::with(['user', 'students.user', 'students.class'])
+            ->findOrFail($parentId);
+
+        // Map parent data with children
+        $parentData = [
+            'id' => $parent->id,
+            'name' => $parent->user->name,
+            'username' => $parent->user->username,
+            'email' => $parent->user->email,
+            'phone' => $parent->phone,
+            'address' => $parent->address,
+            'occupation' => $parent->occupation,
+            'children' => $parent->students->map(function ($student, $index) {
+                $relationship = DB::table('parent_student')
+                    ->where('parent_id', $student->pivot->parent_id)
+                    ->where('student_id', $student->id)
+                    ->value('relationship');
+
+                return [
+                    'id' => $index + 1,
+                    'classId' => $student->class_id,
+                    'studentId' => $student->id,
+                    'relationship' => $relationship ?? 'ayah',
+                ];
+            })->values()->toArray(),
+        ];
+
+        // Get classId from query parameter if provided
+        $classId = request()->query('classId', null);
+
+        // Determine className if classId is provided
+        $className = '';
+        if ($classId) {
+            // Parse classId (format: "1a", "2b")
+            $grade = (int) substr($classId, 0, 1);
+            $section = strtoupper(substr($classId, 1));
+
+            $class = \App\Models\ClassModel::where('grade', $grade)
+                ->where('section', $section)
+                ->first();
+
+            if ($class) {
+                $className = 'Kelas ' . $class->name;
+            }
+        }
+
+        // Get all classes with students
+        $allClasses = \App\Models\ClassModel::with(['students.user'])
+            ->get()
+            ->map(function ($class) {
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'students' => $class->students->map(function ($student) {
+                        return [
+                            'id' => $student->id,
+                            'name' => $student->user->name ?? 'N/A',
+                            'class_id' => $student->class_id,
+                        ];
+                    }),
+                ];
+            });
+
+        return Inertia::render('admin/kelas/parent/edit-parent', [
+            'parent' => $parentData,
+            'classId' => $classId,
+            'className' => $className,
+            'allClasses' => $allClasses,
+        ]);
+    }
+
+    /**
+     * Update parent data in database.
+     */
+    public function updateParent(Request $request, int $parentId)
+    {
+        $parent = ParentModel::with('user')->findOrFail($parentId);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:users,username,' . $parent->user_id,
+            ],
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email,' . $parent->user_id,
+            ],
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'occupation' => 'nullable|string|max:100',
+            'children' => 'required|array|min:1',
+            'children.*.classId' => 'required|exists:classes,id',
+            'children.*.studentId' => 'required|exists:students,id',
+            'children.*.relationship' => 'required|in:ayah,ibu,wali',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Update User account
+            $parent->user->update([
+                'name' => $validated['name'],
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+            ]);
+
+            // 2. Update Parent record
+            $parent->update([
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'occupation' => $validated['occupation'],
+            ]);
+
+            // 3. Sync students - delete old relationships and insert new ones
+            DB::table('parent_student')
+                ->where('parent_id', $parent->id)
+                ->delete();
+
+            foreach ($validated['children'] as $child) {
+                DB::table('parent_student')->insert([
+                    'parent_id' => $parent->id,
+                    'student_id' => $child['studentId'],
+                    'relationship' => $child['relationship'],
+                    'is_primary' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            // Redirect back to class parents page
+            $classId = $request->input('classId');
+            if ($classId) {
+                return redirect()
+                    ->route('admin.orangtua.class', ['classId' => $classId])
+                    ->with('success', 'Data orang tua berhasil diperbarui!');
+            }
+
+            return redirect()
+                ->route('admin.orangtua.dashboard')
+                ->with('success', 'Data orang tua berhasil diperbarui!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Gagal memperbarui data: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Delete parent account.
+     */
+    public function deleteParent(int $parentId)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Find parent with user
+            $parent = ParentModel::with('user')->findOrFail($parentId);
+            $user = $parent->user;
+
+            // 1. Delete parent_student relationships
+            DB::table('parent_student')
+                ->where('parent_id', $parent->id)
+                ->delete();
+
+            // 2. Delete parent record
+            $parent->delete();
+
+            // 3. Delete user account
+            $user->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->back()
+                ->with('success', 'Akun orang tua berhasil dihapus!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Gagal menghapus akun: ' . $e->getMessage()]);
+        }
     }
 
     /**
