@@ -270,4 +270,177 @@ class DashboardController extends Controller
             'biodata' => $biodataArray,
         ]);
     }
+
+    /**
+     * Display monitoring aktivitas page
+     */
+    public function monitoringAktivitas(): Response
+    {
+        $currentUser = auth()->user();
+        
+        // Get classes taught by this teacher
+        $teacherClasses = ClassModel::where('teacher_id', $currentUser->id)
+            ->with(['students'])
+            ->orderBy('name')
+            ->get();
+
+        // Prepare classes data with student count and academic year
+        $classesData = $teacherClasses->map(function ($class) {
+            return [
+                'id' => $class->id,
+                'name' => $class->name,
+                'grade' => $class->grade,
+                'section' => $class->section,
+                'academic_year' => $class->academic_year,
+                'student_count' => $class->students->count(),
+            ];
+        });
+
+        // Get selected class from request or use the first one
+        $selectedClassId = request()->query('class_id');
+        
+        if ($selectedClassId) {
+            $selectedClass = $teacherClasses->firstWhere('id', (int)$selectedClassId);
+        } else {
+            $selectedClass = $teacherClasses->first();
+        }
+
+        $selectedClassData = $selectedClass ? [
+            'id' => $selectedClass->id,
+            'name' => $selectedClass->name,
+            'grade' => $selectedClass->grade,
+            'section' => $selectedClass->section,
+            'academic_year' => $selectedClass->academic_year,
+            'student_count' => $selectedClass->students->count(),
+        ] : null;
+
+        return Inertia::render('guru/monitoring-aktivitas', [
+            'classes' => $classesData,
+            'selectedClass' => $selectedClassData,
+        ]);
+    }
+
+    /**
+     * Display monitoring per siswa page
+     */
+    public function monitoringSiswa(): Response
+    {
+        $currentUser = auth()->user();
+        
+        // Get classes taught by this teacher
+        $teacherClasses = ClassModel::where('teacher_id', $currentUser->id)
+            ->with(['students.user'])
+            ->orderBy('name')
+            ->get();
+
+        // Prepare classes data
+        $classesData = $teacherClasses->map(function ($class) {
+            return [
+                'id' => $class->id,
+                'name' => $class->name,
+                'grade' => $class->grade,
+                'section' => $class->section,
+                'academic_year' => $class->academic_year,
+                'student_count' => $class->students->count(),
+            ];
+        });
+
+        // Get selected class from request or use the first one
+        $selectedClassId = request()->query('class_id');
+        
+        if ($selectedClassId) {
+            $selectedClass = $teacherClasses->firstWhere('id', (int)$selectedClassId);
+        } else {
+            $selectedClass = $teacherClasses->first();
+        }
+
+        // Collect students from selected class only
+        $students = [];
+        if ($selectedClass) {
+            foreach ($selectedClass->students as $student) {
+                $studentUser = $student->user;
+                if ($studentUser) {
+                    $students[] = [
+                        'id' => $studentUser->id,
+                        'student_id' => $student->id,
+                        'name' => strtoupper($studentUser->name),
+                        'nis' => $student->nis ?? '-',
+                        'class' => $selectedClass->name,
+                    ];
+                }
+            }
+        }
+
+        // Get selected student from request
+        $selectedStudentId = request()->query('student_id');
+        $selectedStudent = null;
+        $monthlyProgress = [];
+        
+        if ($selectedStudentId) {
+            $selectedStudent = collect($students)->firstWhere('id', (int)$selectedStudentId);
+            
+            if ($selectedStudent) {
+                // Get current month's date range
+                $startOfMonth = now()->startOfMonth();
+                $endOfMonth = now()->endOfMonth();
+                $daysInMonth = $endOfMonth->day;
+                
+                // Get all activities
+                $activities = Activity::orderBy('order')->get();
+                
+                // Calculate monthly progress for each activity
+                foreach ($activities as $activity) {
+                    $submissions = ActivitySubmission::where('student_id', $selectedStudent['student_id'])
+                        ->where('activity_id', $activity->id)
+                        ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                        ->count();
+                    
+                    $percentage = round(($submissions / $daysInMonth) * 100);
+                    
+                    // Determine status
+                    if ($percentage === 100) {
+                        $status = 'Sangat Baik';
+                        $color = 'bg-green-500';
+                    } elseif ($percentage >= 75) {
+                        $status = 'Baik';
+                        $color = 'bg-blue-500';
+                    } elseif ($percentage >= 50) {
+                        $status = 'Cukup';
+                        $color = 'bg-yellow-500';
+                    } else {
+                        $status = 'Kurang';
+                        $color = 'bg-red-500';
+                    }
+                    
+                    $monthlyProgress[] = [
+                        'activityName' => $activity->title,
+                        'percentage' => $percentage,
+                        'daysCompleted' => $submissions,
+                        'totalDays' => $daysInMonth,
+                        'status' => $status,
+                        'color' => $color,
+                    ];
+                }
+            }
+        }
+
+        $selectedClassData = $selectedClass ? [
+            'id' => $selectedClass->id,
+            'name' => $selectedClass->name,
+            'grade' => $selectedClass->grade,
+            'section' => $selectedClass->section,
+            'academic_year' => $selectedClass->academic_year,
+            'student_count' => $selectedClass->students->count(),
+        ] : null;
+
+        return Inertia::render('guru/monitoring-siswa', [
+            'classes' => $classesData,
+            'selectedClass' => $selectedClassData,
+            'students' => $students,
+            'selectedStudent' => $selectedStudent,
+            'monthlyProgress' => $monthlyProgress,
+            'selectedMonth' => now()->locale('id')->translatedFormat('F'),
+            'selectedYear' => now()->year,
+        ]);
+    }
 }
