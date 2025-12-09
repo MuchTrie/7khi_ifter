@@ -219,12 +219,25 @@ export default function GuruDashboard({
                                     <div className="p-3 md:p-4 border-b border-gray-200">
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                             <h2 className="text-lg md:text-xl font-bold text-blue-600">List Nama Siswa</h2>
-                                            <Input
+                                            <input
                                                 type="text"
                                                 placeholder="Cari Murid"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full sm:max-w-xs"
+                                                style={{
+                                                    width: '100%',
+                                                    maxWidth: '20rem',
+                                                    padding: '8px 12px',
+                                                    border: '2px solid #d1d5db',
+                                                    borderRadius: '8px',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    backgroundColor: '#ffffff',
+                                                    color: '#000000',
+                                                    outline: 'none'
+                                                }}
+                                                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                                                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                                             />
                                         </div>
                                     </div>

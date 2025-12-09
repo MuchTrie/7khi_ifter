@@ -67,6 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Guru Routes
     Route::prefix('guru')->name('guru.')->middleware('role:guru')->group(function () {
         Route::get('dashboard', [GuruDashboardController::class, 'index'])->name('dashboard');
+        Route::get('monitoring-aktivitas', [GuruDashboardController::class, 'monitoringAktivitas'])->name('monitoring-aktivitas');
+        Route::get('monitoring-siswa', [GuruDashboardController::class, 'monitoringSiswa'])->name('monitoring-siswa');
         Route::get('siswa/{student}/activities', [GuruDashboardController::class, 'showStudentActivities'])->name('student.activities');
         Route::get('siswa/{student}/activity/{activity}', [GuruDashboardController::class, 'showStudentActivityDetail'])->name('student.activity.show');
         Route::post('siswa/{student}/activity/{activity}/task/{task}/submit', [GuruDashboardController::class, 'submitStudentTask'])->name('student.activity.task.submit');

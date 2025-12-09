@@ -28,6 +28,8 @@ import {
     User,
     UserCog,
     Users,
+    BarChart3,
+    UserSearch,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -115,6 +117,16 @@ const guruNavItems: NavItem[] = [
         title: 'Beranda',
         href: guruDashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Monitoring Aktivitas Kelas',
+        href: '/guru/monitoring-aktivitas',
+        icon: BarChart3,
+    },
+    {
+        title: 'Monitoring Aktivitas Siswa',
+        href: '/guru/monitoring-siswa',
+        icon: UserSearch,
     },
 ];
 
