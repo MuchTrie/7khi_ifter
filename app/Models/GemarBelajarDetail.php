@@ -9,15 +9,19 @@ class GemarBelajarDetail extends Model
 {
     protected $fillable = [
         'submission_id',
-        'subject',
-        'study_time',
-        'study_duration',
-        'study_type',
+        'gemar_belajar',
+        'ekstrakurikuler',
+        'bimbingan_belajar',
+        'mengerjakan_tugas',
+        'lainnya',
     ];
 
     protected $casts = [
-        'study_time' => 'datetime:H:i',
-        'study_duration' => 'integer',
+        'gemar_belajar' => 'boolean',
+        'ekstrakurikuler' => 'boolean',
+        'bimbingan_belajar' => 'boolean',
+        'mengerjakan_tugas' => 'boolean',
+        'lainnya' => 'boolean',
     ];
 
     public function submission(): BelongsTo

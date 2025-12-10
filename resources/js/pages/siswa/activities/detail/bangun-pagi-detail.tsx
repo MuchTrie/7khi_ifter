@@ -67,7 +67,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
     const [sarapan, setSarapan] = useState(false);
 
     // Check if jam bangun has already been submitted today
-    const hasSubmittedTime = todaySubmission && todaySubmission.time && todaySubmission.time.length > 0;
+    const hasSubmittedTime = !!(todaySubmission && todaySubmission.time && todaySubmission.time.length > 0);
 
     // Load existing data when component mounts or todaySubmission changes
     useEffect(() => {
@@ -103,19 +103,31 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
 
     // Auto-update handler for checkboxes
     const handleCheckboxChange = (checkboxName: string, newValue: boolean) => {
+        console.log('Checkbox clicked:', checkboxName, 'New value:', newValue);
+        console.log('isSavingCheckbox:', isSavingCheckbox);
+        
         // Update local state first for immediate UI feedback
+        let updatedMembereskan = membereskanTempat;
+        let updatedMandi = mandi;
+        let updatedBerpakaian = berpakaianRapi;
+        let updatedSarapan = sarapan;
+
         switch(checkboxName) {
             case 'membereskan_tempat_tidur':
                 setMembereskanTempat(newValue);
+                updatedMembereskan = newValue;
                 break;
             case 'mandi':
                 setMandi(newValue);
+                updatedMandi = newValue;
                 break;
             case 'berpakaian_rapi':
                 setBerpakaianRapi(newValue);
+                updatedBerpakaian = newValue;
                 break;
             case 'sarapan':
                 setSarapan(newValue);
+                updatedSarapan = newValue;
                 break;
         }
 
@@ -125,14 +137,22 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
         const formData = new FormData();
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
-        formData.append('membereskan_tempat_tidur', checkboxName === 'membereskan_tempat_tidur' ? (newValue ? '1' : '0') : (membereskanTempat ? '1' : '0'));
-        formData.append('mandi', checkboxName === 'mandi' ? (newValue ? '1' : '0') : (mandi ? '1' : '0'));
-        formData.append('berpakaian_rapi', checkboxName === 'berpakaian_rapi' ? (newValue ? '1' : '0') : (berpakaianRapi ? '1' : '0'));
-        formData.append('sarapan', checkboxName === 'sarapan' ? (newValue ? '1' : '0') : (sarapan ? '1' : '0'));
+        formData.append('membereskan_tempat_tidur', updatedMembereskan ? '1' : '0');
+        formData.append('mandi', updatedMandi ? '1' : '0');
+        formData.append('berpakaian_rapi', updatedBerpakaian ? '1' : '0');
+        formData.append('sarapan', updatedSarapan ? '1' : '0');
+
+        console.log('Sending data:', {
+            membereskan_tempat_tidur: updatedMembereskan,
+            mandi: updatedMandi,
+            berpakaian_rapi: updatedBerpakaian,
+            sarapan: updatedSarapan
+        });
 
         router.post('/siswa/activities/bangun-pagi/submit', formData, {
             preserveScroll: true,
             onSuccess: () => {
+                console.log('Checkbox saved successfully');
                 setIsSavingCheckbox(false);
                 // Reload data from server to get updated submission
                 router.reload({ only: ['todaySubmission'] });
@@ -174,13 +194,36 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
         formData.append('photo', image);
+        
+        // Include checkbox states to preserve them
+        formData.append('membereskan_tempat_tidur', membereskanTempat ? '1' : '0');
+        formData.append('mandi', mandi ? '1' : '0');
+        formData.append('berpakaian_rapi', berpakaianRapi ? '1' : '0');
+        formData.append('sarapan', sarapan ? '1' : '0');
+        
+        // Include time if exists
+        if (jamBangun) {
+            const timeWithSeconds = jamBangun.includes(':') && jamBangun.split(':').length === 2 
+                ? `${jamBangun}:00` 
+                : jamBangun;
+            formData.append('time', timeWithSeconds);
+        }
 
-        router.post('/siswa/activities/submit', formData, {
+        console.log('Gagal mengupload foto:', {
+            membereskan_tempat_tidur: membereskanTempat,
+            mandi: mandi,
+            berpakaian_rapi: berpakaianRapi,
+            sarapan: sarapan
+        });
+
+        router.post('/siswa/activities/bangun-pagi/submit', formData, {
             preserveScroll: true,
             onSuccess: () => {
                 alert('Foto berhasil diupload!');
                 setImage(null);
                 setIsSubmittingPhoto(false);
+                // Reload to get updated photo data
+                router.reload({ only: ['photoUploadedToday', 'photoCountThisMonth', 'todaySubmission'] });
             },
             onError: (errors: any) => {
                 console.error('Gagal mengupload foto:', errors);
@@ -206,10 +249,15 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
 
         setIsSubmitting(true);
 
+        // Ensure time is in HH:mm:ss format
+        const timeWithSeconds = jamBangun.includes(':') && jamBangun.split(':').length === 2 
+            ? `${jamBangun}:00` 
+            : jamBangun;
+
         const formData = new FormData();
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
-        formData.append('time', jamBangun);
+        formData.append('time', timeWithSeconds);
 
         router.post('/siswa/activities/bangun-pagi/submit', formData, {
             preserveScroll: true,
@@ -271,15 +319,6 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                         </div>
                     )}
 
-                    {/* Today's Data Loaded Banner */}
-                    {todaySubmission && (
-                        <div className="mb-4 bg-blue-100 border-2 border-blue-400 rounded-lg p-3 text-center">
-                            <p className="text-blue-800 font-semibold text-sm">
-                                ℹ️ Data hari ini sudah terisi. Waktu bangun sudah dikunci, tapi checklist masih bisa diubah.
-                            </p>
-                        </div>
-                    )}
-
                     {/* Current Month Display (Read-only) */}
                     <div className="text-center mb-4 sm:mb-8">
                         <h2 className="text-lg sm:text-3xl font-bold text-blue-900">
@@ -337,8 +376,8 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         type="time"
                                         value={jamBangun}
                                         onChange={(e) => setJamBangun(e.target.value)}
-                                        disabled={hasSubmittedTime}
-                                        className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-300 rounded-lg text-gray-900 text-sm sm:text-base hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        readOnly={hasSubmittedTime}
+                                        className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-300 rounded-lg text-gray-900 text-sm sm:text-base hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 read-only:bg-blue-50 read-only:cursor-default read-only:border-blue-300"
                                         required
                                     />
                                     <Button
@@ -365,7 +404,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         checked={membereskanTempat}
                                         onChange={(e) => handleCheckboxChange('membereskan_tempat_tidur', e.target.checked)}
                                         disabled={isSavingCheckbox}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:cursor-wait disabled:opacity-80 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -379,7 +418,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         checked={mandi}
                                         onChange={(e) => handleCheckboxChange('mandi', e.target.checked)}
                                         disabled={isSavingCheckbox}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:cursor-wait disabled:opacity-80 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -393,7 +432,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         checked={berpakaianRapi}
                                         onChange={(e) => handleCheckboxChange('berpakaian_rapi', e.target.checked)}
                                         disabled={isSavingCheckbox}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:cursor-wait disabled:opacity-80 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -407,7 +446,7 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
                                         checked={sarapan}
                                         onChange={(e) => handleCheckboxChange('sarapan', e.target.checked)}
                                         disabled={isSavingCheckbox}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:cursor-wait disabled:opacity-80 cursor-pointer"
                                     />
                                 </div>
                             </div>

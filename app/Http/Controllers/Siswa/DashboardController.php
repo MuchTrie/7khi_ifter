@@ -297,7 +297,6 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($submission) {
                 // Format the details from bangun_pagi_details table
-                // Map new table fields back to old field names for frontend compatibility
                 $details = [];
                 if ($submission->bangunPagiDetail) {
                     $detail = $submission->bangunPagiDetail;
@@ -308,15 +307,15 @@ class DashboardController extends Controller
                         ],
                         'mandi' => [
                             'label' => 'Mandi',
-                            'is_checked' => $detail->tidy_room,
+                            'is_checked' => $detail->mandi,
                         ],
                         'berpakaian_rapi' => [
                             'label' => 'Berpakaian Rapi',
-                            'is_checked' => $detail->open_window,
+                            'is_checked' => $detail->berpakaian_rapi,
                         ],
                         'sarapan' => [
                             'label' => 'Sarapan',
-                            'is_checked' => $detail->morning_prayer,
+                            'is_checked' => $detail->sarapan,
                         ],
                     ];
                 }
@@ -364,11 +363,11 @@ class DashboardController extends Controller
                     $details = [
                         'berolahraga' => [
                             'label' => 'Berolahraga',
-                            'is_checked' => !empty($detail->exercise_type),
+                            'is_checked' => $detail->berolahraga,
                         ],
                         'waktu_berolahraga' => [
                             'label' => 'Waktu Berolahraga',
-                            'value' => $detail->exercise_duration ? $detail->exercise_duration . ' menit' : null,
+                            'value' => $detail->waktu_berolahraga ?? null,
                         ],
                     ];
                 }
@@ -413,28 +412,27 @@ class DashboardController extends Controller
                 $details = [];
                 if ($submission->gemarBelajarDetail) {
                     $detail = $submission->gemarBelajarDetail;
-                    $studyType = $detail->study_type ?? '';
                     
                     $details = [
                         'gemar_belajar' => [
                             'label' => 'Gemar Belajar',
-                            'is_checked' => str_contains($studyType, 'Gemar Belajar'),
+                            'is_checked' => $detail->gemar_belajar,
                         ],
                         'ekstrakurikuler' => [
                             'label' => 'Ekstrakurikuler',
-                            'is_checked' => str_contains($studyType, 'Ekstrakurikuler'),
+                            'is_checked' => $detail->ekstrakurikuler,
                         ],
                         'bimbingan_belajar' => [
                             'label' => 'Bimbingan Belajar',
-                            'is_checked' => str_contains($studyType, 'Bimbingan Belajar'),
+                            'is_checked' => $detail->bimbingan_belajar,
                         ],
                         'mengerjakan_tugas' => [
                             'label' => 'Mengerjakan Tugas',
-                            'is_checked' => str_contains($studyType, 'Mengerjakan Tugas'),
+                            'is_checked' => $detail->mengerjakan_tugas,
                         ],
                         'lainnya' => [
                             'label' => 'Lainnya',
-                            'is_checked' => str_contains($studyType, 'Lainnya'),
+                            'is_checked' => $detail->lainnya,
                         ],
                     ];
                 }
@@ -655,10 +653,12 @@ class DashboardController extends Controller
         }
 
         // Count photos for this month FOR THIS ACTIVITY
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
-            ->whereYear('date', now()->year)
-            ->whereMonth('date', now()->month)
+            ->whereYear('date', $currentYear)
+            ->whereMonth('date', $currentMonth)
             ->whereNotNull('photo')
             ->where('photo', '!=', '')
             ->count();
@@ -724,10 +724,12 @@ class DashboardController extends Controller
         }
 
         // Count photos for this month FOR THIS ACTIVITY
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
-            ->whereYear('date', now()->year)
-            ->whereMonth('date', now()->month)
+            ->whereYear('date', $currentYear)
+            ->whereMonth('date', $currentMonth)
             ->whereNotNull('photo')
             ->where('photo', '!=', '')
             ->count();
@@ -764,8 +766,8 @@ class DashboardController extends Controller
             : now()->format('Y-m-d');
 
         // Get current month's photo uploads FOR THIS ACTIVITY
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
@@ -775,14 +777,55 @@ class DashboardController extends Controller
             ->where('photo', '!=', '')
             ->count();
 
-        // Check if photo was uploaded today FOR THIS ACTIVITY
-        $todaySubmission = ActivitySubmission::where('student_id', $student->id)
+        // Get today's submission with details
+        $todaySubmission = ActivitySubmission::with('bangunPagiDetail')
+            ->where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->where('date', $today)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '')
             ->first();
-        $photoUploadedToday = $todaySubmission !== null;
+
+        // Format submission data
+        $submissionData = null;
+        if ($todaySubmission) {
+            $details = [];
+            
+            if ($todaySubmission->bangunPagiDetail) {
+                $detail = $todaySubmission->bangunPagiDetail;
+                $details = [
+                    'membereskan_tempat_tidur' => [
+                        'label' => 'Membereskan Tempat Tidur',
+                        'is_checked' => $detail->tidy_bed ?? false,
+                        'value' => null,
+                    ],
+                    'mandi' => [
+                        'label' => 'Mandi',
+                        'is_checked' => $detail->mandi ?? false,
+                        'value' => null,
+                    ],
+                    'berpakaian_rapi' => [
+                        'label' => 'Berpakaian Rapi',
+                        'is_checked' => $detail->berpakaian_rapi ?? false,
+                        'value' => null,
+                    ],
+                    'sarapan' => [
+                        'label' => 'Sarapan',
+                        'is_checked' => $detail->sarapan ?? false,
+                        'value' => null,
+                    ],
+                ];
+            }
+
+            $submissionData = [
+                'id' => $todaySubmission->id,
+                'date' => $todaySubmission->date,
+                'time' => $todaySubmission->time,
+                'photo' => $todaySubmission->photo,
+                'status' => $todaySubmission->status,
+                'details' => $details,
+            ];
+        }
+
+        $photoUploadedToday = $todaySubmission && $todaySubmission->photo;
 
         return Inertia::render('siswa/activities/detail/bangun-pagi-detail', [
             'activity' => $activity,
@@ -790,6 +833,7 @@ class DashboardController extends Controller
             'previousActivity' => $previousActivity,
             'photoCountThisMonth' => $photoCountThisMonth,
             'photoUploadedToday' => $photoUploadedToday,
+            'todaySubmission' => $submissionData,
             'currentDate' => $today,
         ]);
     }
@@ -836,8 +880,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->whereYear('date', $currentYear)
@@ -888,14 +932,13 @@ class DashboardController extends Controller
         $submissionData = null;
         if ($todaySubmission && $todaySubmission->gemarBelajarDetail) {
             $detail = $todaySubmission->gemarBelajarDetail;
-            $studyType = $detail->study_type ?? '';
             
             $details = [
-                'gemar_belajar' => ['label' => 'Gemar Belajar', 'is_checked' => str_contains($studyType, 'Gemar Belajar')],
-                'ekstrakurikuler' => ['label' => 'Ekstrakurikuler', 'is_checked' => str_contains($studyType, 'Ekstrakurikuler')],
-                'bimbingan_belajar' => ['label' => 'Bimbingan Belajar', 'is_checked' => str_contains($studyType, 'Bimbingan Belajar')],
-                'mengerjakan_tugas' => ['label' => 'Mengerjakan Tugas', 'is_checked' => str_contains($studyType, 'Mengerjakan Tugas')],
-                'lainnya' => ['label' => 'Lainnya', 'is_checked' => str_contains($studyType, 'Lainnya')],
+                'gemar_belajar' => ['label' => 'Gemar Belajar', 'is_checked' => (bool)$detail->gemar_belajar],
+                'ekstrakurikuler' => ['label' => 'Ekstrakurikuler', 'is_checked' => (bool)$detail->ekstrakurikuler],
+                'bimbingan_belajar' => ['label' => 'Bimbingan Belajar', 'is_checked' => (bool)$detail->bimbingan_belajar],
+                'mengerjakan_tugas' => ['label' => 'Mengerjakan Tugas', 'is_checked' => (bool)$detail->mengerjakan_tugas],
+                'lainnya' => ['label' => 'Lainnya', 'is_checked' => (bool)$detail->lainnya],
             ];
 
             $submissionData = [
@@ -908,8 +951,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->whereYear('date', $currentYear)
@@ -977,8 +1020,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->whereYear('date', $currentYear)
@@ -1046,8 +1089,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->whereYear('date', $currentYear)
@@ -1113,8 +1156,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $currentMonth = \Carbon\Carbon::parse($today)->month;
+        $currentYear = \Carbon\Carbon::parse($today)->year;
         $photoCountThisMonth = ActivitySubmission::where('student_id', $student->id)
             ->where('activity_id', $activity->id)
             ->whereYear('date', $currentYear)
@@ -1145,11 +1188,11 @@ class DashboardController extends Controller
         $validated = $request->validate([
             'activity_id' => 'required|exists:activities,id',
             'date' => 'required|date',
-            'time' => 'nullable|date_format:H:i',
-            'membereskan_tempat_tidur' => 'boolean',
-            'mandi' => 'boolean',
-            'berpakaian_rapi' => 'boolean',
-            'sarapan' => 'boolean',
+            'time' => 'nullable|date_format:H:i:s,H:i',
+            'membereskan_tempat_tidur' => 'nullable',
+            'mandi' => 'nullable',
+            'berpakaian_rapi' => 'nullable',
+            'sarapan' => 'nullable',
             'photo' => 'nullable|image|max:2048',
         ]);
 
@@ -1216,31 +1259,36 @@ class DashboardController extends Controller
                 $dataToUpdate
             );
 
-            // Store activity details (checkboxes)
+            // Store activity details (checkboxes) - Convert string to boolean
+            $membereskan = $request->input('membereskan_tempat_tidur');
+            $mandi = $request->input('mandi');
+            $berpakaianRapi = $request->input('berpakaian_rapi');
+            $sarapan = $request->input('sarapan');
+            
             $details = [
                 [
                     'field_type' => 'checkbox',
                     'field_name' => 'membereskan_tempat_tidur',
                     'field_label' => 'Membereskan Tempat Tidur',
-                    'is_checked' => $validated['membereskan_tempat_tidur'] ?? false,
+                    'is_checked' => ($membereskan === '1' || $membereskan === 1 || $membereskan === true),
                 ],
                 [
                     'field_type' => 'checkbox',
                     'field_name' => 'mandi',
                     'field_label' => 'Mandi',
-                    'is_checked' => $validated['mandi'] ?? false,
+                    'is_checked' => ($mandi === '1' || $mandi === 1 || $mandi === true),
                 ],
                 [
                     'field_type' => 'checkbox',
                     'field_name' => 'berpakaian_rapi',
                     'field_label' => 'Berpakaian Rapi',
-                    'is_checked' => $validated['berpakaian_rapi'] ?? false,
+                    'is_checked' => ($berpakaianRapi === '1' || $berpakaianRapi === 1 || $berpakaianRapi === true),
                 ],
                 [
                     'field_type' => 'checkbox',
                     'field_name' => 'sarapan',
                     'field_label' => 'Sarapan',
-                    'is_checked' => $validated['sarapan'] ?? false,
+                    'is_checked' => ($sarapan === '1' || $sarapan === 1 || $sarapan === true),
                 ],
             ];
 
@@ -1380,22 +1428,23 @@ class DashboardController extends Controller
 
     private function saveBangunPagiDetails($submissionId, Request $request)
     {
-        // Map old form fields to new table structure
-        // Old form: membereskan_tempat_tidur, mandi, berpakaian_rapi, sarapan
-        // New table: tidy_bed, open_window, morning_prayer, tidy_room
-        
         // Get existing submission to check for time
         $submission = ActivitySubmission::find($submissionId);
+        
+        // Convert string '0'/'1' to boolean, default to false if null
+        $tidyBed = $request->input('membereskan_tempat_tidur');
+        $mandi = $request->input('mandi');
+        $berpakaianRapi = $request->input('berpakaian_rapi');
+        $sarapan = $request->input('sarapan');
         
         BangunPagiDetail::updateOrCreate(
             ['submission_id' => $submissionId],
             [
-                'wake_up_time' => $request->input('time') ?? $submission->time, // Use submitted time or existing time
-                'tidy_bed' => $request->boolean('membereskan_tempat_tidur'), // Maps directly
-                'open_window' => $request->boolean('berpakaian_rapi'), // Repurposed field
-                'morning_prayer' => $request->boolean('sarapan'), // Repurposed field
-                'tidy_room' => $request->boolean('mandi'), // Repurposed field
-                'sleep_duration' => null, // Not collected in old form
+                'wake_up_time' => $request->input('time') ?? $submission->time,
+                'tidy_bed' => $tidyBed === '1' || $tidyBed === 1 || $tidyBed === true,
+                'mandi' => $mandi === '1' || $mandi === 1 || $mandi === true,
+                'berpakaian_rapi' => $berpakaianRapi === '1' || $berpakaianRapi === 1 || $berpakaianRapi === true,
+                'sarapan' => $sarapan === '1' || $sarapan === 1 || $sarapan === true,
             ]
         );
     }
@@ -1404,20 +1453,11 @@ class DashboardController extends Controller
     {
         // Extract duration number from dropdown value like "10 Menit", "20 Menit"
         $waktuInput = $request->input('waktu_berolahraga');
-        $duration = null;
-        if ($waktuInput) {
-            // Extract number from string like "10 Menit" -> 10
-            preg_match('/\d+/', $waktuInput, $matches);
-            $duration = isset($matches[0]) ? (int)$matches[0] : null;
-        }
-
         BerolahragaDetail::updateOrCreate(
             ['submission_id' => $submissionId],
             [
-                'exercise_type' => $request->boolean('berolahraga') ? 'Olahraga' : null,
-                'exercise_time' => null, // Not used for now
-                'exercise_duration' => $duration, // Store as integer (minutes)
-                'repetition' => null, // Not in old form
+                'berolahraga' => $request->boolean('berolahraga'),
+                'waktu_berolahraga' => $waktuInput,
             ]
         );
     }
@@ -1449,21 +1489,14 @@ class DashboardController extends Controller
 
     private function saveGemarBelajarDetails($submissionId, Request $request)
     {
-        // Build study_type from checkboxes
-        $types = [];
-        if ($request->boolean('gemar_belajar')) $types[] = 'Gemar Belajar';
-        if ($request->boolean('ekstrakurikuler')) $types[] = 'Ekstrakurikuler';
-        if ($request->boolean('bimbingan_belajar')) $types[] = 'Bimbingan Belajar';
-        if ($request->boolean('mengerjakan_tugas')) $types[] = 'Mengerjakan Tugas';
-        if ($request->boolean('lainnya')) $types[] = 'Lainnya';
-        
         GemarBelajarDetail::updateOrCreate(
             ['submission_id' => $submissionId],
             [
-                'subject' => implode(', ', $types), // Store all selected types
-                'study_time' => null,
-                'study_duration' => null,
-                'study_type' => implode(', ', $types),
+                'gemar_belajar' => $request->boolean('gemar_belajar'),
+                'ekstrakurikuler' => $request->boolean('ekstrakurikuler'),
+                'bimbingan_belajar' => $request->boolean('bimbingan_belajar'),
+                'mengerjakan_tugas' => $request->boolean('mengerjakan_tugas'),
+                'lainnya' => $request->boolean('lainnya'),
             ]
         );
     }
@@ -1473,10 +1506,10 @@ class DashboardController extends Controller
         MakanSehatDetail::updateOrCreate(
             ['submission_id' => $submissionId],
             [
-                'karbohidrat' => $request->input('karbohidrat_name'),
-                'protein' => $request->input('protein_name'),
-                'sayur' => $request->input('sayur_name'),
-                'buah' => $request->input('buah_name'),
+                'karbohidrat' => $request->input('karbohidrat'),
+                'protein' => $request->input('protein'),
+                'sayur' => $request->input('sayur'),
+                'buah' => $request->input('buah'),
             ]
         );
     }
@@ -1486,10 +1519,6 @@ class DashboardController extends Controller
         BermasyarakatDetail::updateOrCreate(
             ['submission_id' => $submissionId],
             [
-                'activity_type' => $request->input('jenis_kegiatan'),
-                'activity_description' => $request->input('deskripsi_kegiatan'),
-                'activity_duration' => $request->input('durasi_kegiatan'),
-                'with_whom' => $request->input('dengan_siapa'),
                 'tarka' => $request->boolean('tarka'),
                 'kerja_bakti' => $request->boolean('kerja_bakti'),
                 'gotong_royong' => $request->boolean('gotong_royong'),
@@ -1504,12 +1533,6 @@ class DashboardController extends Controller
             ['submission_id' => $submissionId],
             [
                 'sleep_time' => $request->input('jam_tidur'),
-                'brush_teeth' => $request->boolean('gosok_gigi'),
-                'wash_face' => $request->boolean('cuci_muka'),
-                'change_clothes' => $request->boolean('ganti_baju'),
-                'prayer_before_sleep' => $request->boolean('berdoa_sebelum_tidur'),
-                'turn_off_gadget' => $request->boolean('matikan_gadget'),
-                'tidy_bed_before_sleep' => $request->boolean('rapikan_tempat_tidur'),
             ]
         );
     }

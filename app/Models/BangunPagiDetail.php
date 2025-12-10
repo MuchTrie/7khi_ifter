@@ -11,19 +11,17 @@ class BangunPagiDetail extends Model
         'submission_id',
         'wake_up_time',
         'tidy_bed',
-        'open_window',
-        'morning_prayer',
-        'tidy_room',
-        'sleep_duration',
+        'mandi',
+        'berpakaian_rapi',
+        'sarapan',
     ];
 
     protected $casts = [
         'wake_up_time' => 'datetime:H:i',
         'tidy_bed' => 'boolean',
-        'open_window' => 'boolean',
-        'morning_prayer' => 'boolean',
-        'tidy_room' => 'boolean',
-        'sleep_duration' => 'integer',
+        'mandi' => 'boolean',
+        'berpakaian_rapi' => 'boolean',
+        'sarapan' => 'boolean',
     ];
 
     public function submission(): BelongsTo

@@ -338,7 +338,6 @@ export default function GemarBelajarHistory({ auth, activity, submissions }: Gem
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Lainnya</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">APPROVAL ORTU</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">BUKTI FOTO</th>
-                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">DETAIL</th>
                                             </tr>
                                         </thead>
                                         <tbody>

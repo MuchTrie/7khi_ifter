@@ -9,16 +9,12 @@ class BerolahragaDetail extends Model
 {
     protected $fillable = [
         'submission_id',
-        'exercise_type',
-        'exercise_time',
-        'exercise_duration',
-        'repetition',
+        'berolahraga',
+        'waktu_berolahraga',
     ];
 
     protected $casts = [
-        'exercise_time' => 'datetime:H:i',
-        'exercise_duration' => 'integer',
-        'repetition' => 'integer',
+        'berolahraga' => 'boolean',
     ];
 
     public function submission(): BelongsTo

@@ -445,9 +445,18 @@ export default function BangunPagiHistory({ auth, activity, submissions }: Bangu
                                 <h3 className="text-xl font-bold text-blue-900 mb-4 text-center">Kalender<br />2025</h3>
                                 <div className="grid grid-cols-3 gap-2">
                                     {monthNames.map((month, index) => (
-                                        <div key={month} className={`p-2 text-center text-xs rounded ${index === currentMonth.getMonth() ? 'bg-blue-500 text-white font-bold' : 'bg-gray-100 text-gray-700'}`}>
+                                        <button
+                                            key={month}
+                                            onClick={() => {
+                                                const newDate = new Date(currentMonth);
+                                                newDate.setMonth(index);
+                                                setCurrentMonth(newDate);
+                                                setCurrentPage(1);
+                                            }}
+                                            className={`p-2 text-center text-xs rounded cursor-pointer hover:scale-105 transition-all duration-200 ${index === currentMonth.getMonth() ? 'bg-blue-500 text-white font-bold shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                        >
                                             {month.substring(0, 3)}
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
                                 <div className="mt-4">

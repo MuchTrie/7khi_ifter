@@ -48,6 +48,7 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
     const serverDate = new Date(currentDate);
     const [currentMonth] = useState(serverDate); // No setter, read-only
     const [selectedDate] = useState(serverDate.getDate()); // No setter, read-only
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Load checkbox state from today's submission
     const [tarka, setTarka] = useState(todaySubmission?.details?.tarka?.is_checked || false);
@@ -62,28 +63,53 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
         'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'
     ];
 
-    // Auto-submit when checkbox changes
-    useEffect(() => {
-        const hasAnyCheckbox = tarka || kerjaBakti || gotongRoyong || lainnya;
-        
-        if (hasAnyCheckbox) {
+    // Auto-update function for checkboxes
+    const handleCheckboxChange = (field: string, checked: boolean, setter: (value: boolean) => void) => {
+        setter(checked);
+        setIsSubmitting(true);
+
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        // Use setTimeout to ensure state is updated
+        setTimeout(() => {
             const formData = new FormData();
             formData.append('activity_id', activity.id.toString());
-            formData.append('date', currentDate);
-            formData.append('tarka', tarka ? '1' : '0');
-            formData.append('kerja_bakti', kerjaBakti ? '1' : '0');
-            formData.append('gotong_royong', gotongRoyong ? '1' : '0');
-            formData.append('lainnya', lainnya ? '1' : '0');
+            formData.append('date', dateString);
+            
+            // Build current state object
+            const currentState = {
+                tarka: tarka,
+                kerja_bakti: kerjaBakti,
+                gotong_royong: gotongRoyong,
+                lainnya: lainnya,
+            };
+            
+            // Update the changed field
+            currentState[field as keyof typeof currentState] = checked;
+            
+            // Send all checkbox states
+            formData.append('tarka', currentState.tarka ? '1' : '0');
+            formData.append('kerja_bakti', currentState.kerja_bakti ? '1' : '0');
+            formData.append('gotong_royong', currentState.gotong_royong ? '1' : '0');
+            formData.append('lainnya', currentState.lainnya ? '1' : '0');
 
             router.post('/siswa/activities/submit', formData, {
                 preserveScroll: true,
                 preserveState: true,
+                onSuccess: () => {
+                    setIsSubmitting(false);
+                },
                 onError: (errors: any) => {
-                    console.error('Gagal menyimpan data:', errors);
+                    console.error('Gagal menyimpan:', errors);
+                    setter(!checked); // Rollback on error
+                    setIsSubmitting(false);
                 }
             });
-        }
-    }, [tarka, kerjaBakti, gotongRoyong, lainnya]);
+        }, 0);
+    };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -105,6 +131,12 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
         formData.append('photo', image);
+        
+        // Include checkbox values to preserve them
+        formData.append('tarka', tarka ? '1' : '0');
+        formData.append('kerja_bakti', kerjaBakti ? '1' : '0');
+        formData.append('gotong_royong', gotongRoyong ? '1' : '0');
+        formData.append('lainnya', lainnya ? '1' : '0');
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
@@ -162,6 +194,15 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                         )}
                     </div>
 
+                    {/* Month Display */}
+                    <div className="flex items-center justify-center mb-4 sm:mb-8">
+                        <div className="text-center">
+                            <h2 className="text-lg sm:text-3xl font-bold text-blue-900">
+                                Bulan : {monthNames[currentMonth.getMonth()]}
+                            </h2>
+                        </div>
+                    </div>
+
                     {/* Main Content Card */}
                     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-8 border-2 sm:border-4 border-gray-800">
                         <h1 className="text-base sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-8 text-center">
@@ -213,9 +254,11 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                                     <input
                                         type="checkbox"
                                         checked={tarka}
-                                        onChange={(e) => setTarka(e.target.checked)}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
+                                        onChange={(e) => handleCheckboxChange('tarka', e.target.checked, setTarka)}
+                                        disabled={isSubmitting}
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
                                     />
+                                    {isSubmitting && <span className="text-sm text-gray-500">Menyimpan...</span>}
                                 </div>
                             </div>
 
@@ -226,8 +269,9 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                                     <input
                                         type="checkbox"
                                         checked={kerjaBakti}
-                                        onChange={(e) => setKerjaBakti(e.target.checked)}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
+                                        onChange={(e) => handleCheckboxChange('kerja_bakti', e.target.checked, setKerjaBakti)}
+                                        disabled={isSubmitting}
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
                                     />
                                 </div>
                             </div>
@@ -239,8 +283,9 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                                     <input
                                         type="checkbox"
                                         checked={gotongRoyong}
-                                        onChange={(e) => setGotongRoyong(e.target.checked)}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
+                                        onChange={(e) => handleCheckboxChange('gotong_royong', e.target.checked, setGotongRoyong)}
+                                        disabled={isSubmitting}
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
                                     />
                                 </div>
                             </div>
@@ -252,8 +297,9 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                                     <input
                                         type="checkbox"
                                         checked={lainnya}
-                                        onChange={(e) => setLainnya(e.target.checked)}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
+                                        onChange={(e) => handleCheckboxChange('lainnya', e.target.checked, setLainnya)}
+                                        disabled={isSubmitting}
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
                                     />
                                 </div>
                             </div>
@@ -328,7 +374,6 @@ export default function BermasyarakatDetail({ auth, activity, nextActivity, prev
                                             >
                                                 {isSubmittingPhoto ? 'Mengupload...' : 'Upload Foto'}
                                             </Button>
-                                            <p className="text-xs text-red-500 mt-2">* Maksimal 1 foto per bulan untuk setiap kegiatan</p>
                                         </div>
                                     </div>
                                 </form>

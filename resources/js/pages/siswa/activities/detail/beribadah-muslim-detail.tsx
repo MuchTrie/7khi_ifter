@@ -217,6 +217,10 @@ export default function BeribadahMuslimDetail({ auth, activity, nextActivity, pr
         formData.append('ashar', prayers.ashar ? '1' : '0');
         formData.append('maghrib', prayers.maghrib ? '1' : '0');
         formData.append('isya', prayers.isya ? '1' : '0');
+        formData.append('mengaji', mengaji ? '1' : '0');
+        formData.append('berdoa', berdoa ? '1' : '0');
+        formData.append('bersedekah', bersedekah ? '1' : '0');
+        formData.append('lainnya', lainnya ? '1' : '0');
         formData.append('photo', image);
 
         router.post('/siswa/activities/submit', formData, {
@@ -224,6 +228,7 @@ export default function BeribadahMuslimDetail({ auth, activity, nextActivity, pr
             onSuccess: () => {
                 alert('Foto berhasil diupload!');
                 setIsSubmittingPhoto(false);
+                setImage(null);
             },
             onError: (errors: any) => {
                 console.error('Gagal mengupload foto:', errors);

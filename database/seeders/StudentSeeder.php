@@ -25,7 +25,6 @@ class StudentSeeder extends Seeder
                 'class_id' => 1, // 1A
                 'gender' => 'L',
                 'date_of_birth' => '2013-05-15',
-                'religion' => 'Islam',
                 'address' => 'Jl. Merdeka No. 123, Bandung',
             ],
             [
@@ -35,7 +34,6 @@ class StudentSeeder extends Seeder
                 'class_id' => 1, // 1A
                 'gender' => 'P',
                 'date_of_birth' => '2013-08-20',
-                'religion' => 'Kristen',
                 'address' => 'Jl. Sudirman No. 456, Bandung',
             ],
             [
@@ -45,7 +43,6 @@ class StudentSeeder extends Seeder
                 'class_id' => 2, // 1B
                 'gender' => 'L',
                 'date_of_birth' => '2013-03-10',
-                'religion' => 'Katolik',
                 'address' => 'Jl. Asia Afrika No. 789, Bandung',
             ],
             [
@@ -55,7 +52,6 @@ class StudentSeeder extends Seeder
                 'class_id' => 3, // 2A
                 'gender' => 'P',
                 'date_of_birth' => '2012-11-25',
-                'religion' => 'Hindu',
                 'address' => 'Jl. Dago No. 321, Bandung',
             ],
             [
@@ -65,8 +61,16 @@ class StudentSeeder extends Seeder
                 'class_id' => 3, // 2A
                 'gender' => 'L',
                 'date_of_birth' => '2012-07-18',
-                'religion' => 'Buddha',
                 'address' => 'Jl. Setiabudhi No. 654, Bandung',
+            ],
+            [
+                'user_id' => $siswaUsers[5]->id ?? 9, // Siswa Konghucu
+                'nis' => (string)($startNumber + 5),
+                'nisn' => '0012345683',
+                'class_id' => 1, // 1A
+                'gender' => 'P',
+                'date_of_birth' => '2013-08-20',
+                'address' => 'Jl. Lengkong No. 789, Bandung',
             ],
         ];
 

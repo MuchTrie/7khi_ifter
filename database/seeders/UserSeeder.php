@@ -88,6 +88,14 @@ class UserSeeder extends Seeder
             'role' => User::ROLE_SISWA,
             'religion' => 'buddha',
         ]);
+
+        User::create([
+            'name' => 'Siswa Konghucu',
+            'email' => 'siswa.konghucu@ifter.com',
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_SISWA,
+            'religion' => 'konghucu',
+        ]);
     }
 }
 
