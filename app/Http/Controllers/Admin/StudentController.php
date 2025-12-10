@@ -36,6 +36,7 @@ class StudentController extends Controller
             'username' => $validated['email'],
             'password' => Hash::make('password'), // Default password
             'role' => User::ROLE_SISWA,
+            'religion' => $validated['religion'],
         ]);
 
         // Create student record
@@ -46,7 +47,6 @@ class StudentController extends Controller
             'nisn' => $validated['nisn'] ?? null,
             'gender' => $validated['gender'],
             'date_of_birth' => $validated['date_of_birth'] ?? null,
-            'religion' => $validated['religion'],
             'address' => $validated['address'] ?? null,
         ]);
 
@@ -58,7 +58,7 @@ class StudentController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'nis' => $student->nis,
-                'religion' => $student->religion,
+                'religion' => $user->religion,
                 'gender' => $student->gender,
             ],
         ]);
@@ -108,6 +108,7 @@ class StudentController extends Controller
         $student->user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'religion' => $validated['religion'],
         ]);
 
         // Update student record
@@ -116,7 +117,6 @@ class StudentController extends Controller
             'nisn' => $validated['nisn'] ?? $student->nisn,
             'gender' => $validated['gender'],
             'date_of_birth' => $validated['date_of_birth'] ?? $student->date_of_birth,
-            'religion' => $validated['religion'],
             'address' => $validated['address'] ?? $student->address,
         ]);
 
@@ -128,7 +128,7 @@ class StudentController extends Controller
                 'name' => $student->user->name,
                 'email' => $student->user->email,
                 'nis' => $student->nis,
-                'religion' => $student->religion,
+                'religion' => $student->user->religion,
                 'gender' => $student->gender,
             ],
         ]);
@@ -182,6 +182,7 @@ class StudentController extends Controller
                     'username' => $email,
                     'password' => Hash::make('password'),
                     'role' => User::ROLE_SISWA,
+                    'religion' => $studentData['religion'],
                 ]);
 
                 // Create student record
@@ -189,7 +190,6 @@ class StudentController extends Controller
                     'user_id' => $user->id,
                     'class_id' => $validated['class_id'],
                     'gender' => $studentData['gender'],
-                    'religion' => $studentData['religion'],
                 ]);
 
                 $imported++;

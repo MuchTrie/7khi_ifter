@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { dashboard } from '@/routes/siswa';
 import { show as showActivity } from '@/routes/siswa/activity';
@@ -12,6 +12,23 @@ interface Activity {
     title: string;
     icon: string;
     color: string;
+}
+
+interface SubmissionDetails {
+    [key: string]: {
+        label: string;
+        is_checked: boolean;
+        value: string | null;
+    };
+}
+
+interface TodaySubmission {
+    id: number;
+    date: string;
+    time: string;
+    photo: string | null;
+    status: string;
+    details: SubmissionDetails;
 }
 
 interface BerolahragaDetailProps {
@@ -27,10 +44,11 @@ interface BerolahragaDetailProps {
     previousActivity?: Activity | null;
     photoCountThisMonth: number;
     photoUploadedToday: boolean;
+    todaySubmission: TodaySubmission | null;
     currentDate: string;
 }
 
-export default function BerolahragaDetail({ auth, activity, nextActivity, previousActivity, photoCountThisMonth, photoUploadedToday, currentDate }: BerolahragaDetailProps) {
+export default function BerolahragaDetail({ auth, activity, nextActivity, previousActivity, photoCountThisMonth, photoUploadedToday, todaySubmission, currentDate }: BerolahragaDetailProps) {
     // Parse server date for display
     const serverDate = new Date(currentDate);
     const [currentMonth] = useState(serverDate); // No setter, read-only
@@ -38,16 +56,85 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
     const [berolahraga, setBerolahraga] = useState(false);
     const [approvalOrangTua, setApprovalOrangTua] = useState(false);
     const [image, setImage] = useState<File | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
 
     // Dropdown state for exercise duration
     const [waktuBerolahraga, setWaktuBerolahraga] = useState('');
 
+    // Load existing data from todaySubmission
+    useEffect(() => {
+        if (todaySubmission?.details?.waktu_berolahraga) {
+            const waktu = todaySubmission.details.waktu_berolahraga.value;
+            if (waktu) {
+                setWaktuBerolahraga(waktu);
+                setBerolahraga(true); // Auto-check checkbox jika ada waktu
+            }
+        }
+    }, [todaySubmission]);
+
     const monthNames = [
         'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
         'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'
     ];
+
+    // Auto-save checkbox handler dengan sinkronisasi ke waktu_berolahraga
+    const handleCheckboxChange = (field: string, value: boolean, setter: (val: boolean) => void) => {
+        const updatedValue = value;
+        setter(updatedValue);
+        
+        // Jika checkbox unchecked, reset waktu berolahraga
+        if (!updatedValue) {
+            setWaktuBerolahraga('');
+        }
+        
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        const formData = new FormData();
+        formData.append('activity_id', activity.id.toString());
+        formData.append('date', dateString);
+        formData.append('berolahraga', updatedValue ? '1' : '0');
+        formData.append('waktu_berolahraga', updatedValue ? waktuBerolahraga : '');
+
+        router.post('/siswa/activities/submit', formData, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: (errors: any) => {
+                console.error('Gagal menyimpan:', errors);
+            }
+        });
+    };
+
+    // Handler untuk dropdown waktu berolahraga
+    const handleWaktuChange = (value: string) => {
+        setWaktuBerolahraga(value);
+        
+        // Auto-check checkbox ketika dropdown dipilih
+        if (value) {
+            setBerolahraga(true);
+        }
+        
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        const formData = new FormData();
+        formData.append('activity_id', activity.id.toString());
+        formData.append('date', dateString);
+        formData.append('berolahraga', value ? '1' : '0'); // Auto-check jika ada value
+        formData.append('waktu_berolahraga', value);
+
+        router.post('/siswa/activities/submit', formData, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: (errors: any) => {
+                console.error('Gagal menyimpan:', errors);
+            }
+        });
+    };
 
     const handlePhotoSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,8 +154,10 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
         const formData = new FormData();
         formData.append('activity_id', activity.id.toString());
         formData.append('date', dateString);
-        // HANYA kirim foto, tidak kirim waktu_berolahraga dan berolahraga
         formData.append('photo', image);
+        // Include checkbox dan waktu agar tidak hilang saat upload foto
+        formData.append('berolahraga', berolahraga ? '1' : '0');
+        formData.append('waktu_berolahraga', waktuBerolahraga);
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
@@ -91,44 +180,7 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!waktuBerolahraga) {
-            alert('Mohon pilih waktu berolahraga');
-            return;
-        }
 
-        setIsSubmitting(true);
-
-        const year = currentMonth.getFullYear();
-        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-
-        const formData = new FormData();
-        formData.append('activity_id', activity.id.toString());
-        formData.append('date', dateString);
-        formData.append('berolahraga', berolahraga ? '1' : '0');
-        formData.append('waktu_berolahraga', waktuBerolahraga);
-        // TIDAK kirim foto, hanya waktu dan checkbox
-
-        router.post('/siswa/activities/submit', formData, {
-            onSuccess: () => {
-                alert('Kegiatan berhasil disimpan!');
-                // Reset form waktu saja
-                setBerolahraga(false);
-                setWaktuBerolahraga('');
-                // TIDAK reset image, biar bisa diupload terpisah
-            },
-            onError: (errors: any) => {
-                alert('Gagal menyimpan: ' + (errors.error || 'Terjadi kesalahan'));
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            }
-        });
-    };
 
     return (
         <AppLayout>
@@ -205,8 +257,8 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                             </div>
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                        {/* Form tanpa onSubmit karena sudah auto-save */}
+                        <div className="space-y-4 sm:space-y-6">
                             {/* Date Input (Read-only) */}
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-center sm:justify-start">
                                 <label className="font-semibold text-gray-700 text-sm sm:text-base sm:w-48 text-center sm:text-left">TANGGAL</label>
@@ -229,15 +281,9 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                                     <input
                                         type="checkbox"
                                         checked={berolahraga}
-                                        onChange={(e) => setBerolahraga(e.target.checked)}
+                                        onChange={(e) => handleCheckboxChange('berolahraga', e.target.checked, setBerolahraga)}
                                         className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
-                                    {/* <Button
-                                        type="button"
-                                        className="bg-gray-800 hover:bg-gray-700 hover:scale-105 transition-all duration-200 text-white px-6 sm:px-8 py-2 shadow-md hover:shadow-lg text-sm sm:text-base"
-                                    >
-                                        Submit
-                                    </Button> */}
                                 </div>
                             </div>
 
@@ -247,9 +293,9 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                                 <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
                                     <select
                                         value={waktuBerolahraga}
-                                        onChange={(e) => setWaktuBerolahraga(e.target.value)}
-                                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 text-sm sm:text-base hover:border-blue-400 transition-all duration-200"
-                                        required
+                                        onChange={(e) => handleWaktuChange(e.target.value)}
+                                        disabled={!berolahraga}
+                                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 text-sm sm:text-base hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">Pilih Durasi</option>
                                         <option value="10">10 Menit</option>
@@ -257,13 +303,6 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                                         <option value="30">30 Menit</option>
                                         <option value="30+">&gt; 30 Menit</option>
                                     </select>
-                                    <Button
-                                        type="submit"
-                                        disabled={isSubmitting || !waktuBerolahraga}
-                                        className="bg-gray-800 hover:bg-gray-700 hover:scale-105 transition-all duration-200 text-white px-6 sm:px-8 py-2 shadow-md hover:shadow-lg text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isSubmitting ? 'Menyimpan...' : 'Kirim'}
-                                    </Button>
                                 </div>
                             </div>
 
@@ -362,7 +401,9 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                                         </div>
                                     </div>
                                 )}
-                            </div>                            {/* Timestamp */}
+                            </div>
+                            
+                            {/* Timestamp */}
                             <div className="text-center sm:text-right text-xs sm:text-sm text-gray-500">
                                 {new Date().toLocaleString('id-ID', {
                                     year: 'numeric',
@@ -372,7 +413,7 @@ export default function BerolahragaDetail({ auth, activity, nextActivity, previo
                                     minute: '2-digit'
                                 })}
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>

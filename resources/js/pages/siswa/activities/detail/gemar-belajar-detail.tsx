@@ -56,7 +56,6 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
     const [gemarBelajar, setGemarBelajar] = useState(false);
     const [approvalOrangTua, setApprovalOrangTua] = useState(false);
     const [image, setImage] = useState<File | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
     const [ekstrakurikuler, setEkstrakurikuler] = useState(false);
     const [bimbinganBelajar, setBimbinganBelajar] = useState(false);
@@ -82,8 +81,15 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
 
     // Auto-update function for checkboxes
     const handleCheckboxChange = (field: string, checked: boolean, setter: (value: boolean) => void) => {
+        // Update local variables immediately to avoid stale state
+        const updatedGemarBelajar = field === 'gemar_belajar' ? checked : gemarBelajar;
+        const updatedEkstrakurikuler = field === 'ekstrakurikuler' ? checked : ekstrakurikuler;
+        const updatedBimbinganBelajar = field === 'bimbingan_belajar' ? checked : bimbinganBelajar;
+        const updatedMengerjakanTugas = field === 'mengerjakan_tugas' ? checked : mengerjakanTugas;
+        const updatedLainnya = field === 'lainnya' ? checked : lainnya;
+
+        // Update state
         setter(checked);
-        setIsSubmitting(true);
 
         const year = currentMonth.getFullYear();
         const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
@@ -94,22 +100,19 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
         formData.append('activity_id', activity.id.toString());
         formData.append('date', dateString);
         
-        // Send all checkbox states
-        formData.append('gemar_belajar', field === 'gemar_belajar' ? (checked ? '1' : '0') : (gemarBelajar ? '1' : '0'));
-        formData.append('ekstrakurikuler', field === 'ekstrakurikuler' ? (checked ? '1' : '0') : (ekstrakurikuler ? '1' : '0'));
-        formData.append('bimbingan_belajar', field === 'bimbingan_belajar' ? (checked ? '1' : '0') : (bimbinganBelajar ? '1' : '0'));
-        formData.append('mengerjakan_tugas', field === 'mengerjakan_tugas' ? (checked ? '1' : '0') : (mengerjakanTugas ? '1' : '0'));
-        formData.append('lainnya', field === 'lainnya' ? (checked ? '1' : '0') : (lainnya ? '1' : '0'));
+        // Use updated local variables instead of state
+        formData.append('gemar_belajar', updatedGemarBelajar ? '1' : '0');
+        formData.append('ekstrakurikuler', updatedEkstrakurikuler ? '1' : '0');
+        formData.append('bimbingan_belajar', updatedBimbinganBelajar ? '1' : '0');
+        formData.append('mengerjakan_tugas', updatedMengerjakanTugas ? '1' : '0');
+        formData.append('lainnya', updatedLainnya ? '1' : '0');
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
-            onSuccess: () => {
-                setIsSubmitting(false);
-            },
+            preserveState: true,
             onError: (errors: any) => {
                 console.error('Gagal menyimpan:', errors);
                 setter(!checked); // Rollback on error
-                setIsSubmitting(false);
             }
         });
     };
@@ -270,10 +273,8 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
                                         type="checkbox"
                                         checked={gemarBelajar}
                                         onChange={(e) => handleCheckboxChange('gemar_belajar', e.target.checked, setGemarBelajar)}
-                                        disabled={isSubmitting}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
-                                    {isSubmitting && <span className="text-sm text-gray-500">Menyimpan...</span>}
                                 </div>
                             </div>
 
@@ -290,8 +291,7 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
                                         type="checkbox"
                                         checked={ekstrakurikuler}
                                         onChange={(e) => handleCheckboxChange('ekstrakurikuler', e.target.checked, setEkstrakurikuler)}
-                                        disabled={isSubmitting}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -304,8 +304,7 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
                                         type="checkbox"
                                         checked={bimbinganBelajar}
                                         onChange={(e) => handleCheckboxChange('bimbingan_belajar', e.target.checked, setBimbinganBelajar)}
-                                        disabled={isSubmitting}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -318,8 +317,7 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
                                         type="checkbox"
                                         checked={mengerjakanTugas}
                                         onChange={(e) => handleCheckboxChange('mengerjakan_tugas', e.target.checked, setMengerjakanTugas)}
-                                        disabled={isSubmitting}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -332,8 +330,7 @@ export default function GemarBelajarDetail({ auth, activity, nextActivity, previ
                                         type="checkbox"
                                         checked={lainnya}
                                         onChange={(e) => handleCheckboxChange('lainnya', e.target.checked, setLainnya)}
-                                        disabled={isSubmitting}
-                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200 disabled:opacity-50"
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-200"
                                     />
                                 </div>
                             </div>

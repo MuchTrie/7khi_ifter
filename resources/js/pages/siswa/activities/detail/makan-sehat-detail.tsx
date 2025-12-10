@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { dashboard } from '@/routes/siswa';
 import { show as showActivity } from '@/routes/siswa/activity';
@@ -12,6 +12,23 @@ interface Activity {
     title: string;
     icon: string;
     color: string;
+}
+
+interface SubmissionDetails {
+    [key: string]: {
+        label: string;
+        is_checked: boolean;
+        value?: string | null;
+    };
+}
+
+interface TodaySubmission {
+    id: number;
+    date: string;
+    time: string;
+    photo: string | null;
+    status: string;
+    details: SubmissionDetails;
 }
 
 interface MakanSehatDetailProps {
@@ -27,10 +44,11 @@ interface MakanSehatDetailProps {
     previousActivity?: Activity | null;
     photoCountThisMonth: number;
     photoUploadedToday: boolean;
+    todaySubmission: TodaySubmission | null;
     currentDate: string;
 }
 
-export default function MakanSehatDetail({ auth, activity, nextActivity, previousActivity, photoCountThisMonth, photoUploadedToday, currentDate }: MakanSehatDetailProps) {
+export default function MakanSehatDetail({ auth, activity, nextActivity, previousActivity, photoCountThisMonth, photoUploadedToday, todaySubmission, currentDate }: MakanSehatDetailProps) {
     // Parse server date for display
     const serverDate = new Date(currentDate);
     const [currentMonth] = useState(serverDate); // No setter, read-only
@@ -42,53 +60,66 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
         buah: ''
     });
 
-    // Dropdown options - semua bernilai 1 kecuali "Tidak Ada" bernilai 0
+    // Load data yang sudah dipilih dari todaySubmission
+    useEffect(() => {
+        if (todaySubmission?.details) {
+            const details = todaySubmission.details;
+            setNutrition({
+                karbohidrat: details.karbohidrat?.value || '',
+                protein: details.protein?.value || '',
+                sayur: details.sayur?.value || '',
+                buah: details.buah?.value || ''
+            });
+        }
+    }, [todaySubmission]);
+
+    // Dropdown options - value menggunakan label untuk uniqueness
     const karbohidratOptions = [
         { value: '', label: 'Pilih' },
-        { value: '1', label: 'Nasi' },
-        { value: '1', label: 'Roti' },
-        { value: '1', label: 'Kentang' },
-        { value: '1', label: 'Mie' },
-        { value: '1', label: 'Singkong' },
-        { value: '1', label: 'Ubi' },
-        { value: '1', label: 'Lainnya' },
-        { value: '0', label: 'Tidak Ada' },
+        { value: 'Nasi', label: 'Nasi' },
+        { value: 'Roti', label: 'Roti' },
+        { value: 'Kentang', label: 'Kentang' },
+        { value: 'Mie', label: 'Mie' },
+        { value: 'Singkong', label: 'Singkong' },
+        { value: 'Ubi', label: 'Ubi' },
+        { value: 'Lainnya', label: 'Lainnya' },
+        { value: 'Tidak Ada', label: 'Tidak Ada' },
     ];
 
     const proteinOptions = [
         { value: '', label: 'Pilih' },
-        { value: '1', label: 'Ayam' },
-        { value: '1', label: 'Ikan' },
-        { value: '1', label: 'Daging' },
-        { value: '1', label: 'Telur' },
-        { value: '1', label: 'Tempe' },
-        { value: '1', label: 'Tahu' },
-        { value: '1', label: 'Lainnya' },
-        { value: '0', label: 'Tidak Ada' },
+        { value: 'Ayam', label: 'Ayam' },
+        { value: 'Ikan', label: 'Ikan' },
+        { value: 'Daging', label: 'Daging' },
+        { value: 'Telur', label: 'Telur' },
+        { value: 'Tempe', label: 'Tempe' },
+        { value: 'Tahu', label: 'Tahu' },
+        { value: 'Lainnya', label: 'Lainnya' },
+        { value: 'Tidak Ada', label: 'Tidak Ada' },
     ];
 
     const sayurOptions = [
         { value: '', label: 'Pilih' },
-        { value: '1', label: 'Bayam' },
-        { value: '1', label: 'Kangkung' },
-        { value: '1', label: 'Wortel' },
-        { value: '1', label: 'Brokoli' },
-        { value: '1', label: 'Kol' },
-        { value: '1', label: 'Tomat' },
-        { value: '1', label: 'Lainnya' },
-        { value: '0', label: 'Tidak Ada' },
+        { value: 'Bayam', label: 'Bayam' },
+        { value: 'Kangkung', label: 'Kangkung' },
+        { value: 'Wortel', label: 'Wortel' },
+        { value: 'Brokoli', label: 'Brokoli' },
+        { value: 'Kol', label: 'Kol' },
+        { value: 'Tomat', label: 'Tomat' },
+        { value: 'Lainnya', label: 'Lainnya' },
+        { value: 'Tidak Ada', label: 'Tidak Ada' },
     ];
 
     const buahOptions = [
         { value: '', label: 'Pilih' },
-        { value: '1', label: 'Pisang' },
-        { value: '1', label: 'Apel' },
-        { value: '1', label: 'Jeruk' },
-        { value: '1', label: 'Pepaya' },
-        { value: '1', label: 'Semangka' },
-        { value: '1', label: 'Mangga' },
-        { value: '1', label: 'Lainnya' },
-        { value: '0', label: 'Tidak Ada' },
+        { value: 'Pisang', label: 'Pisang' },
+        { value: 'Apel', label: 'Apel' },
+        { value: 'Jeruk', label: 'Jeruk' },
+        { value: 'Pepaya', label: 'Pepaya' },
+        { value: 'Semangka', label: 'Semangka' },
+        { value: 'Mangga', label: 'Mangga' },
+        { value: 'Lainnya', label: 'Lainnya' },
+        { value: 'Tidak Ada', label: 'Tidak Ada' },
     ];
     const [image, setImage] = useState<File | null>(null);
     const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
@@ -118,6 +149,12 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
         formData.append('photo', image);
+        
+        // Include nutrition values to preserve them
+        formData.append('karbohidrat', nutrition.karbohidrat);
+        formData.append('protein', nutrition.protein);
+        formData.append('sayur', nutrition.sayur);
+        formData.append('buah', nutrition.buah);
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
@@ -125,7 +162,7 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                 alert('Foto berhasil diupload!');
                 setImage(null);
                 setIsSubmittingPhoto(false);
-                router.reload({ only: ['photoUploadedToday', 'photoCountThisMonth'] });
+                router.reload({ only: ['photoUploadedToday', 'photoCountThisMonth', 'todaySubmission'] });
             },
             onError: (errors: any) => {
                 console.error('Gagal mengupload foto:', errors);
@@ -138,17 +175,17 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Cek apakah data sudah pernah disimpan hari ini
+        if (todaySubmission) {
+            alert('Data untuk hari ini sudah disimpan. Anda hanya bisa input data 1 kali per hari.');
+            return;
+        }
+        
         // Validasi: Pastikan semua dropdown sudah dipilih (tidak boleh kosong/"Pilih")
         if (!nutrition.karbohidrat || !nutrition.protein || !nutrition.sayur || !nutrition.buah) {
             alert('Mohon pilih semua pilihan (Karbohidrat, Protein, Sayur, dan Buah) sebelum menyimpan data!');
             return;
         }
-        
-        // Get the selected option labels
-        const karbohidratLabel = karbohidratOptions.find(opt => opt.value === nutrition.karbohidrat)?.label || '';
-        const proteinLabel = proteinOptions.find(opt => opt.value === nutrition.protein)?.label || '';
-        const sayurLabel = sayurOptions.find(opt => opt.value === nutrition.sayur)?.label || '';
-        const buahLabel = buahOptions.find(opt => opt.value === nutrition.buah)?.label || '';
         
         const formData = new FormData();
         formData.append('activity_id', activity.id.toString());
@@ -157,15 +194,12 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
         formData.append('protein', nutrition.protein);
         formData.append('sayur', nutrition.sayur);
         formData.append('buah', nutrition.buah);
-        formData.append('karbohidrat_name', karbohidratLabel);
-        formData.append('protein_name', proteinLabel);
-        formData.append('sayur_name', sayurLabel);
-        formData.append('buah_name', buahLabel);
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
             onSuccess: () => {
                 alert('Data berhasil disimpan!');
+                router.reload({ only: ['todaySubmission'] });
             },
             onError: (errors: any) => {
                 console.error('Gagal menyimpan data:', errors);
@@ -214,27 +248,13 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                         )}
                     </div>
 
-                    {/* Month Navigation */}
-                    <div className="flex items-center justify-center gap-3 sm:gap-8 mb-4 sm:mb-8">
-                        <button
-                            onClick={() => changeMonth('prev')}
-                            className="text-gray-700 hover:text-blue-600 hover:scale-110 transition-all duration-200 p-1 sm:p-2 rounded-full hover:bg-blue-100"
-                        >
-                            <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-                        </button>
-
+                    {/* Month Display */}
+                    <div className="flex items-center justify-center mb-4 sm:mb-8">
                         <div className="text-center">
                             <h2 className="text-lg sm:text-3xl font-bold text-blue-900">
                                 Bulan : {monthNames[currentMonth.getMonth()]}
                             </h2>
                         </div>
-
-                        <button
-                            onClick={() => changeMonth('next')}
-                            className="text-gray-700 hover:text-blue-600 hover:scale-110 transition-all duration-200 p-1 sm:p-2 rounded-full hover:bg-blue-100"
-                        >
-                            <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-                        </button>
                     </div>
 
                     {/* Main Content Card */}
@@ -286,7 +306,8 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                                 <select
                                     value={nutrition.karbohidrat}
                                     onChange={(e) => setNutrition(prev => ({ ...prev, karbohidrat: e.target.value }))}
-                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+                                    disabled={!!todaySubmission}
+                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {karbohidratOptions.map((option, index) => (
                                         <option key={index} value={option.value}>
@@ -302,7 +323,8 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                                 <select
                                     value={nutrition.protein}
                                     onChange={(e) => setNutrition(prev => ({ ...prev, protein: e.target.value }))}
-                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+                                    disabled={!!todaySubmission}
+                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {proteinOptions.map((option, index) => (
                                         <option key={index} value={option.value}>
@@ -318,7 +340,8 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                                 <select
                                     value={nutrition.sayur}
                                     onChange={(e) => setNutrition(prev => ({ ...prev, sayur: e.target.value }))}
-                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+                                    disabled={!!todaySubmission}
+                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {sayurOptions.map((option, index) => (
                                         <option key={index} value={option.value}>
@@ -334,7 +357,8 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
                                 <select
                                     value={nutrition.buah}
                                     onChange={(e) => setNutrition(prev => ({ ...prev, buah: e.target.value }))}
-                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white"
+                                    disabled={!!todaySubmission}
+                                    className="flex-1 sm:flex-none sm:w-64 px-4 py-2 border-2 border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {buahOptions.map((option, index) => (
                                         <option key={index} value={option.value}>
@@ -346,12 +370,18 @@ export default function MakanSehatDetail({ auth, activity, nextActivity, previou
 
                             {/* Submit Button */}
                             <div className="flex justify-center sm:justify-end pt-4">
-                                <Button
-                                    type="submit"
-                                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-                                >
-                                    Simpan Data
-                                </Button>
+                                {todaySubmission ? (
+                                    <div className="w-full sm:w-auto bg-green-50 border-2 border-green-500 text-green-800 font-semibold py-3 px-8 rounded-lg text-center">
+                                        ✓ Data Sudah Disimpan
+                                    </div>
+                                ) : (
+                                    <Button
+                                        type="submit"
+                                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                                    >
+                                        Simpan Data
+                                    </Button>
+                                )}
                             </div>
                         </form>
 

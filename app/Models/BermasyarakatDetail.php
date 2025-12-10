@@ -9,10 +9,6 @@ class BermasyarakatDetail extends Model
 {
     protected $fillable = [
         'submission_id',
-        'activity_type',
-        'activity_description',
-        'activity_duration',
-        'with_whom',
         'tarka',
         'kerja_bakti',
         'gotong_royong',
@@ -20,7 +16,6 @@ class BermasyarakatDetail extends Model
     ];
 
     protected $casts = [
-        'activity_duration' => 'integer',
         'tarka' => 'boolean',
         'kerja_bakti' => 'boolean',
         'gotong_royong' => 'boolean',

@@ -112,12 +112,8 @@ export default function TidurCepatHistory({ auth, activity, submissions }: Tidur
                                     <span className="text-white font-bold text-sm sm:text-base md:text-lg">{activity.id}</span>
                                 </div> */}
                                 <div className={`${activity.color} p-3 sm:p-4 md:p-8 flex items-center justify-center`}>
-                                    <div className="bg-blue-200 rounded-lg sm:rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-6 w-full">
-                                        <img
-                                            src="/api/placeholder/200/150"
-                                            alt={activity.title}
-                                            className="w-full h-auto rounded-lg"
-                                        />
+                                    <div className="bg-blue-200 rounded-lg sm:rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-6 w-full flex items-center justify-center">
+                                        <span className="text-4xl sm:text-5xl md:text-6xl">{activity.icon}</span>
                                     </div>
                                 </div>
                                 <div className="p-3 sm:p-4 text-center">
@@ -418,9 +414,6 @@ export default function TidurCepatHistory({ auth, activity, submissions }: Tidur
                                 src={`/storage/${selectedPhoto}`}
                                 alt="Bukti Foto"
                                 className="w-full h-auto rounded-lg"
-                                onError={(e) => {
-                                    e.currentTarget.src = '/api/placeholder/400/300';
-                                }}
                             />
                         </div>
                     </div>

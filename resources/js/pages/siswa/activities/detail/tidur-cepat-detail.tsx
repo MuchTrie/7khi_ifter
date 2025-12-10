@@ -111,6 +111,11 @@ export default function TidurCepatDetail({ auth, activity, nextActivity, previou
         formData.append('activity_id', activity.id.toString());
         formData.append('date', currentDate);
         formData.append('photo', image);
+        
+        // Include jam_tidur to preserve the time input
+        if (jamTidur) {
+            formData.append('jam_tidur', jamTidur);
+        }
 
         router.post('/siswa/activities/submit', formData, {
             preserveScroll: true,
@@ -153,6 +158,15 @@ export default function TidurCepatDetail({ auth, activity, nextActivity, previou
                         </Link>
                     </div>
 
+                    {/* Month Display */}
+                    <div className="flex items-center justify-center mb-4 sm:mb-8">
+                        <div className="text-center">
+                            <h2 className="text-lg sm:text-3xl font-bold text-blue-900">
+                                Bulan : {monthNames[currentMonth.getMonth()]}
+                            </h2>
+                        </div>
+                    </div>
+
                     {/* Main Content Card */}
                     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-8 border-2 sm:border-4 border-gray-800">
                         <h1 className="text-base sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-8 text-center">
@@ -168,12 +182,8 @@ export default function TidurCepatDetail({ auth, activity, nextActivity, previou
 
                                 <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 sm:border-4 border-blue-900 overflow-hidden w-48 sm:w-64">
                                     <div className={`${activity.color} p-8 flex items-center justify-center`}>
-                                        <div className="bg-blue-200 rounded-2xl p-6 w-full">
-                                            <img
-                                                src="/api/placeholder/200/150"
-                                                alt={activity.title}
-                                                className="w-full h-auto rounded-lg"
-                                            />
+                                        <div className="bg-blue-200 rounded-2xl p-6 w-full flex items-center justify-center">
+                                            <span className="text-6xl">{activity.icon}</span>
                                         </div>
                                     </div>
                                     <div className="p-4 text-center">

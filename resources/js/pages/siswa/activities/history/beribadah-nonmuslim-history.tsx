@@ -77,18 +77,18 @@ export default function BeribadahNonMuslimHistory({ auth, activity, submissions 
             return {
                 doaPagi: false,
                 bacaFirman: false,
-                persekutuan: false,
-                pelayanan: false,
-                lainnya: false
+                renungan: false,
+                doaMalam: false,
+                ibadahBersama: false
             };
         }
 
         return {
             doaPagi: submission.details.doa_pagi?.is_checked || false,
             bacaFirman: submission.details.baca_firman?.is_checked || false,
-            persekutuan: submission.details.persekutuan?.is_checked || false,
-            pelayanan: submission.details.pelayanan?.is_checked || false,
-            lainnya: submission.details.lainnya?.is_checked || false
+            renungan: submission.details.renungan?.is_checked || false,
+            doaMalam: submission.details.doa_malam?.is_checked || false,
+            ibadahBersama: submission.details.ibadah_bersama?.is_checked || false
         };
     };
 
@@ -217,9 +217,9 @@ export default function BeribadahNonMuslimHistory({ auth, activity, submissions 
                                                     return [
                                                         { key: 'doaPagi', label: 'Doa Pagi', color: 'blue' },
                                                         { key: 'bacaFirman', label: 'Baca Firman', color: 'green' },
-                                                        { key: 'persekutuan', label: 'Persekutuan', color: 'purple' },
-                                                        { key: 'pelayanan', label: 'Pelayanan', color: 'orange' },
-                                                        { key: 'lainnya', label: 'Lainnya', color: 'pink' }
+                                                        { key: 'renungan', label: 'Renungan', color: 'purple' },
+                                                        { key: 'doaMalam', label: 'Doa Malam', color: 'orange' },
+                                                        { key: 'ibadahBersama', label: 'Ibadah Bersama', color: 'pink' }
                                                     ].map((item, idx) => (
                                                         <div key={idx} className={`flex flex-col items-center gap-1 p-2 bg-${item.color}-50 rounded-lg ${idx === 4 ? 'col-span-3' : ''}`}>
                                                             <input
@@ -300,9 +300,9 @@ export default function BeribadahNonMuslimHistory({ auth, activity, submissions 
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">TANGGAL</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Doa Pagi</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Baca Firman</th>
-                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Persekutuan</th>
-                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Pelayanan</th>
-                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Lainnya</th>
+                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Renungan</th>
+                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Doa Malam</th>
+                                                <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">Ibadah Bersama</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">APPROVAL ORTU</th>
                                                 <th className="py-4 px-4 text-center font-bold text-gray-700 text-sm whitespace-nowrap">BUKTI FOTO</th>
                                             </tr>
@@ -322,7 +322,7 @@ export default function BeribadahNonMuslimHistory({ auth, activity, submissions 
                                                     {/* Activity columns */}
                                                     {(() => {
                                                         const activities = getCheckedActivities(day);
-                                                        return ['doaPagi', 'bacaFirman', 'persekutuan', 'pelayanan', 'lainnya'].map((activity) => (
+                                                        return ['doaPagi', 'bacaFirman', 'renungan', 'doaMalam', 'ibadahBersama'].map((activity) => (
                                                             <td key={activity} className="py-4 px-2">
                                                                 <div className="flex justify-center items-center">
                                                                     <input
