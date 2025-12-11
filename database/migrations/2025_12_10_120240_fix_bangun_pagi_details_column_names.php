@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bangun_pagi_details', function (Blueprint $table) {
-            // Rename columns to match the correct schema
-            $table->renameColumn('mandi', 'open_window');
-            $table->renameColumn('berpakaian_rapi', 'morning_prayer');
-            $table->renameColumn('sarapan', 'tidy_room');
+            // Drop English-named columns
+            $table->dropColumn(['wake_up_time', 'tidy_bed']);
+            
+            // Add new columns with Indonesian names
+            // mandi, berpakaian_rapi, and sarapan already exist with correct names
+            $table->time('jam_bangun')->nullable()->after('submission_id');
+            $table->boolean('membereskan_tempat_tidur')->default(false)->after('jam_bangun');
         });
     }
 
@@ -25,10 +28,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('bangun_pagi_details', function (Blueprint $table) {
-            // Revert column names
-            $table->renameColumn('open_window', 'mandi');
-            $table->renameColumn('morning_prayer', 'berpakaian_rapi');
-            $table->renameColumn('tidy_room', 'sarapan');
+            // Drop Indonesian columns
+            $table->dropColumn(['jam_bangun', 'membereskan_tempat_tidur']);
+            
+            // Restore English-named columns
+            $table->time('wake_up_time')->nullable()->after('submission_id');
+            $table->boolean('tidy_bed')->default(false)->after('wake_up_time');
         });
     }
 };
