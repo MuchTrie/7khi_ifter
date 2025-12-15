@@ -143,9 +143,9 @@ class DashboardController extends Controller
                     case 1: $detailRelation = $submission->bangunPagiDetail; break;
                     case 2: $detailRelation = $submission->beribadahDetail; break;
                     case 3: $detailRelation = $submission->berolahragaDetail; break;
-                    case 4: $detailRelation = $submission->bermasyarakatDetail; break;
-                    case 5: $detailRelation = $submission->gemarBelajarDetail; break;
-                    case 6: $detailRelation = $submission->makanSehatDetail; break;
+                    case 4: $detailRelation = $submission->gemarBelajarDetail; break;
+                    case 5: $detailRelation = $submission->makanSehatDetail; break;
+                    case 6: $detailRelation = $submission->bermasyarakatDetail; break;
                     case 7: $detailRelation = $submission->tidurCepatDetail; break;
                 }
 
