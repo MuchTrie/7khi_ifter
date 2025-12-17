@@ -384,7 +384,7 @@ class DashboardController extends Controller
                     $details = [
                         'membereskan_tempat_tidur' => [
                             'label' => 'Membereskan Tempat Tidur',
-                            'is_checked' => $detail->tidy_bed,
+                            'is_checked' => $detail->membereskan_tempat_tidur,
                         ],
                         'mandi' => [
                             'label' => 'Mandi',
@@ -1547,13 +1547,14 @@ class DashboardController extends Controller
             [
                 'jam_bangun' => $request->input('time') ?? $submission->time,
                 'membereskan_tempat_tidur' => $membereskanTempatTidur === '1' || $membereskanTempatTidur === 1 || $membereskanTempatTidur === true,
+                'membereskan_tempat_tidur' => $tidyBed === '1' || $tidyBed === 1 || $tidyBed === true,
                 'mandi' => $mandi === '1' || $mandi === 1 || $mandi === true,
                 'berpakaian_rapi' => $berpakaianRapi === '1' || $berpakaianRapi === 1 || $berpakaianRapi === true,
                 'sarapan' => $sarapan === '1' || $sarapan === 1 || $sarapan === true,
             ]
         );
     }
-
+    
     private function saveBerolahragaDetails($submissionId, Request $request)
     {
         // Extract duration number from dropdown value like "10 Menit", "20 Menit"
