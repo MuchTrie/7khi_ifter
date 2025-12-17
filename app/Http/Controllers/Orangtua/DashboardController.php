@@ -150,16 +150,63 @@ class DashboardController extends Controller
                 if ($detailRelation) {
                     $fieldLabels = [
                         // Bangun Pagi
-                        'wake_up_time' => 'Jam Bangun',
-                        // ...lanjutan field labels...
+                        'jam_bangun' => 'Jam Bangun',
+                        'membereskan_tempat_tidur' => 'Merapikan Tempat Tidur',
+                        'open_window' => 'Membuka Jendela',
+                        'morning_prayer' => 'Berdoa Pagi',
+                        'tidy_room' => 'Merapikan Kamar',
+                        'sleep_duration' => 'Durasi Tidur',
+                        
+                        // Beribadah
+                        'shubuh' => 'Sholat Subuh',
+                        'dzuhur' => 'Sholat Dzuhur',
+                        'ashar' => 'Sholat Ashar',
+                        'maghrib' => 'Sholat Maghrib',
+                        'isya' => 'Sholat Isya',
+                        'read_quran' => 'Mengaji',
+                        
+                        // Berolahraga
+                        'exercise_type' => 'Jenis Olahraga',
+                        'duration' => 'Durasi',
+                        
+                        // Bermasyarakat
+                        'activity_type' => 'Jenis Kegiatan',
+                        'activity_description' => 'Deskripsi Kegiatan',
+                        'activity_duration' => 'Durasi Kegiatan',
+                        'with_whom' => 'Bersama',
+                        'tarka' => 'TARKA',
+                        'kerja_bakti' => 'Kerja Bakti',
+                        'gotong_royong' => 'Gotong Royong',
+                        'lainnya' => 'Lainnya',
+                        
+                        // Gemar Belajar
+                        'subject' => 'Mata Pelajaran',
+                        'study_time' => 'Waktu Belajar',
+                        'study_duration' => 'Durasi Belajar',
+                        'study_type' => 'Jenis Belajar',
+                        
+                        // Makan Sehat
+                        'karbohidrat' => 'Karbohidrat',
+                        'protein' => 'Protein',
+                        'sayur' => 'Sayur',
+                        'buah' => 'Buah',
+                        
+                        // Tidur Cepat
+                        'sleep_time' => 'Jam Tidur',
+                        'brush_teeth' => 'Sikat Gigi',
+                        'night_prayer' => 'Doa Malam',
                     ];
                     $detailArray = $detailRelation->toArray();
                     foreach ($detailArray as $key => $value) {
                         if (in_array($key, ['id', 'submission_id', 'created_at', 'updated_at'])) continue;
                         $label = $fieldLabels[$key] ?? ucwords(str_replace('_', ' ', $key));
-                        if ($activity->id === 5) {
-                            // Makan Sehat: show the selected food items
-                            if ($value !== null && $value !== '' && $value !== 'Tidak Ada') {
+                        
+                        // Boolean fields list
+                        $booleanFields = ['membereskan_tempat_tidur', 'open_window', 'morning_prayer', 'tidy_room', 'shubuh', 'dzuhur', 'ashar', 'maghrib', 'isya', 'read_quran', 'tarka', 'kerja_bakti', 'gotong_royong', 'lainnya', 'brush_teeth', 'night_prayer'];
+                        
+                        // Special handling for Tidur Cepat (Activity 7) - only show time
+                        if ($activity->id === 7) {
+                            if ($key === 'sleep_time' && $value !== null && $value !== '') {
                                 $details[$key] = [
                                     'label' => $label . ': ' . $value,
                                     'is_checked' => true
