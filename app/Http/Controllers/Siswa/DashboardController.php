@@ -450,6 +450,10 @@ class DashboardController extends Controller
                             'label' => 'Waktu Berolahraga',
                             'value' => $detail->waktu_berolahraga ?? null,
                         ],
+                        'exercise_type' => [
+                            'label' => 'Jenis Olahraga',
+                            'value' => $detail->exercise_type ?? null,
+                        ],
                     ];
                 }
 
@@ -1559,6 +1563,7 @@ class DashboardController extends Controller
             [
                 'berolahraga' => $request->boolean('berolahraga'),
                 'waktu_berolahraga' => $waktuInput,
+                'exercise_type' => $request->input('exercise_type'),
             ]
         );
     }
