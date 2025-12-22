@@ -34,7 +34,6 @@ export default function ClassStudents({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         name: '',
-        email: '',
         nis: '',
         nisn: '',
         religion: '',
@@ -87,7 +86,6 @@ export default function ClassStudents({
                 `/admin/students/${selectedStudent.id}`,
                 {
                     name: formData.name,
-                    email: formData.email,
                     nis: formData.nis,
                     nisn: formData.nisn || null,
                     religion: formData.religion,
@@ -102,7 +100,6 @@ export default function ClassStudents({
                 showSuccess('Data siswa berhasil diupdate');
                 setFormData({
                     name: '',
-                    email: '',
                     nis: '',
                     nisn: '',
                     religion: '',
@@ -133,7 +130,6 @@ export default function ClassStudents({
         setSelectedStudent(student);
         setFormData({
             name: student.name,
-            email: student.email || '',
             nis: student.nis || '',
             nisn: student.nisn || '',
             religion: student.religion,

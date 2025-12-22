@@ -23,7 +23,6 @@ interface CreateAccountProps {
 
 interface FormData {
     name: string;
-    email: string;
     nis: string;
     nisn: string;
     religion: string;
@@ -46,7 +45,6 @@ export default function CreateAccount({ classes }: CreateAccountProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         name: '',
-        email: '',
         nis: '',
         nisn: '',
         religion: '',
@@ -78,7 +76,6 @@ export default function CreateAccount({ classes }: CreateAccountProps) {
             const response = await axios.post('/admin/students', {
                 class_id: formData.class_id ? parseInt(formData.class_id) : null,
                 name: formData.name,
-                email: formData.email,
                 nis: formData.nis,
                 nisn: formData.nisn || null,
                 religion: formData.religion,
@@ -92,7 +89,6 @@ export default function CreateAccount({ classes }: CreateAccountProps) {
                 // Reset form
                 setFormData({
                     name: '',
-                    email: '',
                     nis: '',
                     nisn: '',
                     religion: '',
@@ -154,23 +150,6 @@ export default function CreateAccount({ classes }: CreateAccountProps) {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         placeholder="Masukkan nama siswa"
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Email */}
-                                <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                        Email{' '}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="contoh@email.com"
                                         className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                                         required
                                     />
@@ -322,7 +301,6 @@ export default function CreateAccount({ classes }: CreateAccountProps) {
                                             ) {
                                                 setFormData({
                                                     name: '',
-                                                    email: '',
                                                     nis: '',
                                                     nisn: '',
                                                     religion: '',
