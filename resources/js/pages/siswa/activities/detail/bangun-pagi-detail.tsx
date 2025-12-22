@@ -277,6 +277,12 @@ export default function BangunPagiDetail({ auth, activity, nextActivity, previou
         formData.append('date', currentDate);
         formData.append('time', timeWithSeconds);
 
+        // Include checkbox states to preserve them when submitting time
+        formData.append('membereskan_tempat_tidur', membereskanTempat ? '1' : '0');
+        formData.append('mandi', mandi ? '1' : '0');
+        formData.append('berpakaian_rapi', berpakaianRapi ? '1' : '0');
+        formData.append('sarapan', sarapan ? '1' : '0');
+
         router.post('/siswa/activities/bangun-pagi/submit', formData, {
             preserveScroll: true,
             onSuccess: (page) => {
