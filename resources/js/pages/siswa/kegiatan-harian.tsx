@@ -66,13 +66,13 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
                 newChecked[activityId] = new Set();
             }
             const daySet = new Set(newChecked[activityId]);
-            
+
             if (daySet.has(day)) {
                 daySet.delete(day);
             } else {
                 daySet.add(day);
             }
-            
+
             newChecked[activityId] = daySet;
             return newChecked;
         });
@@ -111,19 +111,19 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
         const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-        
+
         const calendarDays: (number | null)[] = [];
-        
+
         // Add empty slots for days before the first day of month
         for (let i = 0; i < startingDayOfWeek; i++) {
             calendarDays.push(null);
         }
-        
+
         // Add actual days
         for (let day = 1; day <= daysInMonth; day++) {
             calendarDays.push(day);
         }
-        
+
         return calendarDays;
     };
 
@@ -166,7 +166,7 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
 
     // Activity icons and colors mapping
     const activityConfig: Record<string, { emoji: string; color: string }> = {
-        'BERIBADAH': { emoji: '🙏', color: '#FFD700' },
+        'BERIBADAH': { emoji: '🤲', color: '#FFD700' },
         'BANGUN PAGI': { emoji: '☀️', color: '#FFD700' },
         'BEROLAHRAGA': { emoji: '⚽', color: '#FFD700' },
         'MAKAN SEHAT DAN BERGIZI': { emoji: '🍎', color: '#FFD700' },
@@ -213,7 +213,7 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
                                         <h4 className="text-lg font-semibold text-center text-gray-700 mb-4">
                                             {selectedDate.getFullYear()}
                                         </h4>
-                                        
+
                                         {/* Day headers */}
                                         <div className="grid grid-cols-7 gap-1 mb-2">
                                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((dayName, idx) => (
@@ -222,7 +222,7 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
                                                 </div>
                                             ))}
                                         </div>
-                                        
+
                                         {/* Calendar grid */}
                                         <div className="grid grid-cols-7 gap-1 mb-4">
                                             {calendarDays.map((day, idx) => {
@@ -238,10 +238,10 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
                                                             ${autoChecked
                                                                 ? 'bg-green-500 text-white font-bold border-2 border-green-700 shadow-lg'
                                                                 : day === currentDate.getDate() &&
-                                                                  selectedDate.getMonth() === currentDate.getMonth() &&
-                                                                  selectedDate.getFullYear() === currentDate.getFullYear()
-                                                                ? 'bg-blue-500 text-white font-bold'
-                                                                : 'text-blue-600'}
+                                                                    selectedDate.getMonth() === currentDate.getMonth() &&
+                                                                    selectedDate.getFullYear() === currentDate.getFullYear()
+                                                                    ? 'bg-blue-500 text-white font-bold'
+                                                                    : 'text-blue-600'}
                                                         `}
                                                         title={autoChecked ? 'Semua kegiatan sudah di-approve orang tua' : ''}
                                                         style={{ cursor: 'not-allowed', pointerEvents: 'none' }}
@@ -294,7 +294,7 @@ export default function KegiatanHarian({ auth, activities, submissions }: Kegiat
                                                         );
                                                     })}
                                                 </div>
-                                                
+
 
                                             </CardContent>
                                         </Card>

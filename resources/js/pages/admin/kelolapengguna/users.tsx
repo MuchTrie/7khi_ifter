@@ -19,7 +19,7 @@ export default function AdminUsers({ users, userStats, auth }: AdminUsersProps &
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState<SortColumn>('name');
+    const [sortBy, setSortBy] = useState<SortColumn>('id');
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     // Modal states
