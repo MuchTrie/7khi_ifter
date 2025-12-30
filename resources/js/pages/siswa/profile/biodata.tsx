@@ -20,6 +20,8 @@ interface BiodataProps {
             name: string;
             email: string;
             role: string;
+            nis?: string;
+            gender?: 'L' | 'P';
         };
     };
     biodata?: Biodata;
@@ -66,7 +68,10 @@ export default function Biodata({ auth, biodata }: BiodataProps) {
                                     </Avatar>
                                     <div className="min-w-0 flex-1">
                                         <h2 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{auth.user.name}</h2>
-                                        <p className="text-sm text-gray-500">Siswa</p>
+                                        <p className="text-sm text-gray-500">{auth.user.gender === 'P' ? 'Siswi' : 'Siswa'}</p>
+                                        {auth.user.nis && (
+                                            <p className="text-xs text-gray-400">{auth.user.nis}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="sm:ml-auto">
