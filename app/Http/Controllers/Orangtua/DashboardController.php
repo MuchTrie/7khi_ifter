@@ -230,7 +230,7 @@ class DashboardController extends Controller
                                         'is_checked' => true
                                     ];
                                 }
-                            } else if ($value !== null && $value !== '' && $value !== 'Tidak Ada') {
+                            } else if ($value !== null && $value !== '') {
                                 $details[$key] = [
                                     'label' => $label . ': ' . $value,
                                     'is_checked' => true
@@ -300,32 +300,5 @@ class DashboardController extends Controller
         ]);
 
         return back()->with('success', 'Kegiatan berhasil disetujui');
-    }
-
-    /**
-     * Reject a submission.
-     */
-    public function reject(Request $request, ActivitySubmission $submission)
-    {
-        $user = $request->user();
-        $parent = ParentModel::where('user_id', $user->id)->first();
-
-        if (!$parent) {
-            return back()->with('error', 'Parent record not found');
-        }
-
-        // Check if the submission belongs to parent's student
-        if (!$parent->students->contains($submission->student_id)) {
-            return back()->with('error', 'Unauthorized');
-        }
-
-        $submission->update([
-            'status' => 'rejected',
-            'approved_by' => $parent->id,
-            'approved_at' => now(),
-            'rejection_reason' => $request->input('reason', 'Tidak memenuhi kriteria'),
-        ]);
-
-        return back()->with('success', 'Kegiatan berhasil ditolak');
     }
 }

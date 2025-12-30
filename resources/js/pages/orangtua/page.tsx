@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import { approve, reject } from '@/routes/orangtua/submissions';
+import { approve } from '@/routes/orangtua/submissions';
 
 import { useState, useMemo } from 'react';
 import {

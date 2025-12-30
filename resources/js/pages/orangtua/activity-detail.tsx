@@ -3,7 +3,7 @@ import { Head, router, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { ConfirmationModal } from './_components';
 import { ArrowLeft, ArrowUp, Clock, Camera, CheckCircle2, AlertCircle, XCircle, Info } from 'lucide-react';
-import { approve, reject } from '@/routes/orangtua/submissions';
+import { approve } from '@/routes/orangtua/submissions';
 import { dashboard } from '@/routes/orangtua';
 
 interface DetailItem {
@@ -60,7 +60,7 @@ export default function ActivityDetail({ auth, activities, student, date }: Acti
     activityTitle: '',
   });
 
-  const [rejectionReason, setRejectionReason] = useState('');
+
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
@@ -87,29 +87,13 @@ export default function ActivityDetail({ auth, activities, student, date }: Acti
     });
   };
 
-  const handleReject = (submissionId: number, activityTitle: string) => {
-    setConfirmationModal({
-      isOpen: true,
-      type: 'reject',
-      submissionId,
-      activityTitle,
-    });
-    setRejectionReason('');
-  };
-
   const confirmAction = () => {
     if (!confirmationModal.submissionId) return;
 
-    const route = confirmationModal.type === 'approve'
-      ? approve.url(confirmationModal.submissionId)
-      : reject.url(confirmationModal.submissionId);
-
-    router.post(route, {
-      reason: rejectionReason
-    }, {
+    router.post(approve.url(confirmationModal.submissionId), {}, {
       preserveScroll: true,
       onSuccess: () => {
-        // Refresh activities list so approve/reject state reflects immediately
+        // Refresh activities list so approve state reflects immediately
         router.reload({ only: ['activities'] });
         setConfirmationModal(prev => ({ ...prev, isOpen: false, submissionId: null }));
       },
