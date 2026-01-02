@@ -65,6 +65,8 @@ export default function EditUserModal({
   if (!isOpen || !user) return null;
 
   const isSiswa = user.role === 'siswa';
+  const isGuru = user.role === 'guru';
+  const showReligionField = isSiswa || isGuru; // Agama hanya untuk Siswa dan Guru
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,25 +160,27 @@ export default function EditUserModal({
             />
           </div>
 
-          {/* Religion */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agama
-            </label>
-            <select
-              name="religion"
-              value={formData.religion}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-            >
-              <option value="">Pilih Agama</option>
-              {religionOptions.map(religion => (
-                <option key={religion} value={religion}>
-                  {religion}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Religion - hanya untuk Siswa dan Guru */}
+          {showReligionField && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Agama
+              </label>
+              <select
+                name="religion"
+                value={formData.religion}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+              >
+                <option value="">Pilih Agama</option>
+                {religionOptions.map(religion => (
+                  <option key={religion} value={religion}>
+                    {religion}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Role (editable dropdown) */}
           <div>
