@@ -99,7 +99,7 @@ class LoginController extends Controller
   {
     return RateLimiter::tooManyAttempts(
       $this->throttleKey($request),
-      5
+      10 // Changed from 5 to 10 to match FortifyServiceProvider
     );
   }
 
@@ -120,7 +120,7 @@ class LoginController extends Controller
     $seconds = RateLimiter::availableIn($this->throttleKey($request));
 
     return back()->withErrors([
-      'login_error' => trans('auth.throttle', ['seconds' => $seconds]),
+      'login_error' => "Terlalu banyak percobaan login. Silakan tunggu {$seconds} detik sebelum mencoba lagi.",
     ]);
   }
 

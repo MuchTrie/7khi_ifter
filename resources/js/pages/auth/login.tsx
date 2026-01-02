@@ -4,8 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import { XCircle, X } from 'lucide-react';
 
 interface LoginProps {
     status?: string;
@@ -26,6 +27,7 @@ export default function Login({
 }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [loginType, setLoginType] = useState<'siswa' | 'staff'>('siswa');
+    const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
 
     const { data, setData, post, processing, errors, reset } = useForm({
         nis: '',
@@ -34,6 +36,32 @@ export default function Login({
         remember: false,
         email: '',
     });
+
+    // Get page errors
+    const { errors: pageErrors } = usePage().props as any;
+    const loginError = (errors as any).login_error || pageErrors?.login_error;
+
+    // Check if it's a rate limit error (contains "Terlalu banyak" or "Too many")
+    const isRateLimitError = loginError && (
+        loginError.includes('Terlalu banyak') ||
+        loginError.includes('Too many') ||
+        loginError.includes('tunggu')
+    );
+
+    // Regular login error (not rate limit) - shown inline
+    const regularLoginError = loginError && !isRateLimitError ? loginError : null;
+
+    // Show toast ONLY for rate limit error
+    useEffect(() => {
+        if (isRateLimitError && loginError) {
+            setToast({ message: loginError, visible: true });
+            // Auto hide after 6 seconds
+            const timer = setTimeout(() => {
+                setToast(prev => ({ ...prev, visible: false }));
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [isRateLimitError, loginError]);
 
     // Load remembered password on mount
     useEffect(() => {
@@ -80,6 +108,22 @@ export default function Login({
     return (
         <>
             <Head title="Log in" />
+
+            {/* Toast Notification for Rate Limit - Positioned at top center */}
+            {toast.visible && (
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[90vw] max-w-md animate-in slide-in-from-top duration-300">
+                    <div className="bg-red-500 border-red-600 text-white px-4 py-3 rounded-lg shadow-lg border-l-4 flex items-center gap-3">
+                        <XCircle className="w-5 h-5 flex-shrink-0" />
+                        <p className="flex-1 text-sm font-medium">{toast.message}</p>
+                        <button
+                            onClick={() => setToast(prev => ({ ...prev, visible: false }))}
+                            className="text-white/80 hover:text-white transition-colors flex-shrink-0"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="min-h-screen flex flex-col lg:flex-row relative bg-white overflow-hidden">
                 {/* Desktop background - fixed position, no zoom */}
@@ -160,11 +204,11 @@ export default function Login({
                                 onSubmit={handleSubmit}
                                 className="space-y-4 sm:space-y-6"
                             >
-                                {/* Show validation errors if any */}
-                                {(errors.nis || errors.username || errors.email || errors.password || (errors as any).login_error) && (
+                                {/* Show validation errors inline (including regular login errors like wrong password) */}
+                                {(errors.nis || errors.username || errors.email || errors.password || regularLoginError) && (
                                     <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
                                         <p className="text-red-700 text-xs sm:text-sm font-medium">
-                                            {(errors as any).login_error || errors.nis || errors.username || errors.email || errors.password || 'NIS/Username atau Password tidak valid'}
+                                            {regularLoginError || errors.nis || errors.username || errors.email || errors.password || 'NIS/Username atau Password tidak valid'}
                                         </p>
                                     </div>
                                 )}

@@ -120,6 +120,17 @@ class UserController extends Controller
             ], 403);
         }
 
+        // Protect minimum admin count - prevent deleting if only 1 admin left
+        if ($user->role === User::ROLE_ADMIN) {
+            $adminCount = User::where('role', User::ROLE_ADMIN)->count();
+            if ($adminCount <= 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus admin terakhir. Minimal harus ada 1 admin di sistem.',
+                ], 403);
+            }
+        }
+
         // Delete related records based on role
         switch ($user->role) {
             case User::ROLE_SISWA:
