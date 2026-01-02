@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('username', 50)->nullable()->unique();
-            $table->string('religion')->default('muslim');
+            $table->string('religion')->default('Islam');
             $table->enum('role', ['siswa', 'orangtua', 'guru', 'admin'])->default('siswa');
             $table->string('password');
             $table->string('plain_password')->nullable();

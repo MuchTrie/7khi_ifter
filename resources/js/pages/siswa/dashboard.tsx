@@ -40,9 +40,9 @@ export default function SiswaDashboard({ auth, activities, completionPercentage,
 
         // Handle berbakti/beribadah - route to appropriate page based on religion
         if (title.includes('berbakti') || title.includes('beribadah')) {
-            // Check user religion to determine which page
-            const userReligion = auth.user.religion || 'muslim';
-            if (userReligion === 'muslim') {
+            // Check user religion to determine which page (case insensitive)
+            const userReligion = (auth.user.religion || 'Islam').toLowerCase();
+            if (userReligion === 'islam') {
                 return `/siswa/activities/beribadah-muslim/${activityId}`;
             } else {
                 return `/siswa/activities/beribadah-nonmuslim/${activityId}`;

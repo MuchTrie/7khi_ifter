@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_ADMIN,
-                'religion' => 'muslim',
+                'religion' => 'islam',
             ]
         );
 
@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
                 'name' => 'Guru Test',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_GURU,
-                'religion' => 'muslim',
+                'religion' => 'islam',
             ]
         );
 
@@ -43,7 +43,7 @@ class UserSeeder extends Seeder
                 'name' => 'Orangtua Test',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_ORANGTUA,
-                'religion' => 'muslim',
+                'religion' => 'islam',
             ]
         );
 
@@ -54,7 +54,7 @@ class UserSeeder extends Seeder
                 'name' => 'Siswa Muslim',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_SISWA,
-                'religion' => 'muslim',
+                'religion' => 'islam',
             ]
         );
 

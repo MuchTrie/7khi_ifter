@@ -339,7 +339,7 @@ export default function BeribadahMuslimDetail({ auth, activity, nextActivity, pr
                                     <div className={`${activity.color} p-6 sm:p-8 flex items-center justify-center`}>
                                         <div className="bg-blue-200 rounded-2xl p-4 sm:p-6 w-full">
                                             <div className="w-full h-32 sm:h-40 bg-white rounded-lg flex items-center justify-center text-gray-400">
-                                                <span className="text-4xl sm:text-5xl">🕌</span>
+                                                <span className="text-4xl sm:text-5xl">🤲</span>
                                             </div>
                                         </div>
                                     </div>
