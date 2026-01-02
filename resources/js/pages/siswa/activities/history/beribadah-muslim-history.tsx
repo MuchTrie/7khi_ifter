@@ -141,7 +141,7 @@ export default function BeribadahMuslimHistory({ auth, activity, submissions }: 
                                 <div className={`${activity.color} p-4 sm:p-8 flex items-center justify-center`}>
                                     <div className="bg-blue-200 rounded-xl sm:rounded-2xl p-3 sm:p-6 w-full">
                                         <div className="w-full h-32 sm:h-40 bg-white rounded-lg flex items-center justify-center text-gray-400">
-                                            <span className="text-3xl sm:text-5xl">🕌</span>
+                                            <span className="text-3xl sm:text-5xl">🤲</span>
                                         </div>
                                     </div>
                                 </div>
@@ -436,8 +436,8 @@ export default function BeribadahMuslimHistory({ auth, activity, submissions }: 
                                                 key={page}
                                                 onClick={() => setCurrentPage(page)}
                                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                                                        ? 'bg-blue-500 text-white'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                     }`}
                                             >
                                                 {page}

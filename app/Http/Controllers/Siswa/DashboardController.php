@@ -114,8 +114,8 @@ class DashboardController extends Controller
         // Determine which specific detail page to render
         if (str_contains($title, 'berbakti') || str_contains($title, 'beribadah')) {
             // "Berbakti" in database is actually "Beribadah" with muslim/non-muslim variants
-            // Check for Islam (database value) - case insensitive
-            if (strtolower($user->religion) === 'islam' || strtolower($user->religion) === 'muslim') {
+            // Check for Islam - case insensitive
+            if (strtolower($user->religion) === 'islam') {
                 return $this->beribadahMuslimDetail($activity);
             } else {
                 return $this->beribadahNonmuslimDetail($activity);
@@ -286,7 +286,7 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Determine which component to render based on user's religion
-        if (strtolower($user->religion) === 'islam' || strtolower($user->religion) === 'muslim') {
+        if (strtolower($user->religion) === 'islam') {
             return Inertia::render('siswa/activities/history/beribadah-muslim-history', [
                 'activity' => $activity,
             ]);
@@ -318,7 +318,7 @@ class DashboardController extends Controller
                 if ($submission->beribadahDetail) {
                     $detail = $submission->beribadahDetail;
                     
-                    if (strtolower($user->religion) === 'islam' || strtolower($user->religion) === 'muslim') {
+                    if (strtolower($user->religion) === 'islam') {
                         $details = [
                             'subuh' => ['label' => 'Subuh', 'is_checked' => $detail->subuh],
                             'dzuhur' => ['label' => 'Dzuhur', 'is_checked' => $detail->dzuhur],
@@ -354,7 +354,7 @@ class DashboardController extends Controller
             });
 
         // Determine which component to render based on user's religion
-        if (strtolower($user->religion) === 'islam' || strtolower($user->religion) === 'muslim') {
+        if (strtolower($user->religion) === 'islam') {
             return Inertia::render('siswa/activities/history/beribadah-muslim-history', [
                 'activity' => $activity,
                 'submissions' => $submissions,
