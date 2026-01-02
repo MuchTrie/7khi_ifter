@@ -1,13 +1,7 @@
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-// import { send } from '@/routes/verification'; // Commented - route not available
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 import HeadingSmall from '@/components/heading-small';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -20,13 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Profile({
-    mustVerifyEmail,
-    status,
-}: {
-    mustVerifyEmail: boolean;
-    status?: string;
-}) {
+export default function Profile() {
     const { auth } = usePage<SharedData>().props;
 
     return (
@@ -37,106 +25,26 @@ export default function Profile({
                 <div className="space-y-6">
                     <HeadingSmall
                         title="Informasi Profil"
-                        description="Perbarui nama Anda"
+                        description="Informasi akun Anda"
                     />
 
-                    <Form
-                        {...ProfileController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ processing, recentlySuccessful, errors }) => (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nama</Label>
+                    <div className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label>Nama</Label>
+                            <div className="mt-1 block w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-200">
+                                {String(auth.user.name)}
+                            </div>
+                        </div>
 
-                                    <Input
-                                        id="name"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
-                                        name="name"
-                                        required
-                                        autoComplete="name"
-                                        placeholder="Nama lengkap"
-                                    />
-
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.name}
-                                    />
+                        {auth.user.role !== 'siswa' && auth.user.username && (
+                            <div className="grid gap-2">
+                                <Label>Username</Label>
+                                <div className="mt-1 block w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-200">
+                                    {String(auth.user.username)}
                                 </div>
-
-
-
-                                {auth.user.role !== 'siswa' && (
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="username">Username</Label>
-
-                                        <Input
-                                            id="username"
-                                            type="text"
-                                            className="mt-1 block w-full"
-                                            defaultValue={auth.user.username || ''}
-                                            name="username"
-                                            autoComplete="username"
-                                            placeholder="Username untuk login"
-                                        />
-
-                                        <InputError
-                                            className="mt-2"
-                                            message={errors.username}
-                                        />
-                                    </div>
-                                )}
-
-                                {mustVerifyEmail &&
-                                    auth.user.email_verified_at === null && (
-                                        <div>
-                                            <p className="-mt-4 text-sm text-muted-foreground">
-                                                Email Anda belum diverifikasi.{' '}
-                                                <Link
-                                                    href={send()}
-                                                    as="button"
-                                                    className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                                                >
-                                                    Klik di sini untuk mengirim ulang email verifikasi.
-                                                </Link>
-                                            </p>
-
-                                            {status ===
-                                                'verification-link-sent' && (
-                                                    <div className="mt-2 text-sm font-medium text-green-600">
-                                                        Link verifikasi baru telah dikirim ke alamat email Anda.
-                                                    </div>
-                                                )}
-                                        </div>
-                                    )}
-
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-profile-button"
-                                    >
-                                        Simpan
-                                    </Button>
-
-                                    <Transition
-                                        show={recentlySuccessful}
-                                        enter="transition ease-in-out"
-                                        enterFrom="opacity-0"
-                                        leave="transition ease-in-out"
-                                        leaveTo="opacity-0"
-                                    >
-                                        <p className="text-sm text-neutral-600">
-                                            Tersimpan
-                                        </p>
-                                    </Transition>
-                                </div>
-                            </>
+                            </div>
                         )}
-                    </Form>
+                    </div>
                 </div>
             </SettingsLayout>
         </AppLayout>

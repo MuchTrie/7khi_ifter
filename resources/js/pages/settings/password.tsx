@@ -5,12 +5,14 @@ import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/toast';
 import { edit } from '@/routes/settings/password';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,6 +25,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
+
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -57,22 +63,43 @@ export default function Password() {
                         }}
                         className="space-y-6"
                     >
-                        {({ errors, processing, recentlySuccessful }) => (
-                            <>
+                        {({ errors, processing, recentlySuccessful }) => {
+                            const { showToast } = useToast();
+
+                            useEffect(() => {
+                                if (recentlySuccessful) {
+                                    showToast('Kata sandi berhasil diubah!', 'success');
+                                }
+                            }, [recentlySuccessful]);
+
+                            return (<>
                                 <div className="grid gap-2">
                                     <Label htmlFor="current_password">
                                         Kata Sandi Saat Ini
                                     </Label>
 
-                                    <Input
-                                        id="current_password"
-                                        ref={currentPasswordInput}
-                                        name="current_password"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        autoComplete="current-password"
-                                        placeholder="Kata sandi saat ini"
-                                    />
+                                    <div className="relative mt-1">
+                                        <Input
+                                            id="current_password"
+                                            ref={currentPasswordInput}
+                                            name="current_password"
+                                            type={showCurrentPassword ? 'text' : 'password'}
+                                            className="block w-full pr-10"
+                                            autoComplete="current-password"
+                                            placeholder="Kata sandi saat ini"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400 hover:text-neutral-600"
+                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        >
+                                            {showCurrentPassword ? (
+                                                <EyeOff className="h-4 w-4" />
+                                            ) : (
+                                                <Eye className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    </div>
 
                                     <InputError
                                         message={errors.current_password}
@@ -84,15 +111,28 @@ export default function Password() {
                                         Kata Sandi Baru
                                     </Label>
 
-                                    <Input
-                                        id="password"
-                                        ref={passwordInput}
-                                        name="password"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        autoComplete="new-password"
-                                        placeholder="Kata sandi baru"
-                                    />
+                                    <div className="relative mt-1">
+                                        <Input
+                                            id="password"
+                                            ref={passwordInput}
+                                            name="password"
+                                            type={showNewPassword ? 'text' : 'password'}
+                                            className="block w-full pr-10"
+                                            autoComplete="new-password"
+                                            placeholder="Kata sandi baru"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400 hover:text-neutral-600"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                        >
+                                            {showNewPassword ? (
+                                                <EyeOff className="h-4 w-4" />
+                                            ) : (
+                                                <Eye className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    </div>
 
                                     <InputError message={errors.password} />
                                 </div>
@@ -102,14 +142,27 @@ export default function Password() {
                                         Konfirmasi Kata Sandi
                                     </Label>
 
-                                    <Input
-                                        id="password_confirmation"
-                                        name="password_confirmation"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        autoComplete="new-password"
-                                        placeholder="Konfirmasi kata sandi"
-                                    />
+                                    <div className="relative mt-1">
+                                        <Input
+                                            id="password_confirmation"
+                                            name="password_confirmation"
+                                            type={showConfirmPassword ? 'text' : 'password'}
+                                            className="block w-full pr-10"
+                                            autoComplete="new-password"
+                                            placeholder="Konfirmasi kata sandi"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400 hover:text-neutral-600"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        >
+                                            {showConfirmPassword ? (
+                                                <EyeOff className="h-4 w-4" />
+                                            ) : (
+                                                <Eye className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    </div>
 
                                     <InputError
                                         message={errors.password_confirmation}
@@ -136,8 +189,8 @@ export default function Password() {
                                         </p>
                                     </Transition>
                                 </div>
-                            </>
-                        )}
+                            </>);
+                        }}
                     </Form>
                 </div>
             </SettingsLayout>
