@@ -172,7 +172,12 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'current_password' => [
+            'current_password' => 'Kata sandi saat ini salah.',
+            'required' => 'Kata sandi saat ini wajib diisi.',
+        ],
         'password' => [
+            'required' => 'Kata sandi baru wajib diisi.',
             'confirmed' => 'Konfirmasi kata sandi tidak cocok.',
             'min' => 'Kata sandi harus minimal :min karakter.',
         ],
